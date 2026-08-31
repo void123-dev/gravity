@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { computeGravity } from "./gravity.ts";
 import type { Bar } from "./types.ts";
 import { parseVenue } from "./venues/shared.ts";
+import { decideConsensus } from "./venues/consensus.ts";
 
 function makeBars(opts: {
   n?: number;
@@ -143,7 +144,43 @@ describe("venue pits", () => {
   it("parses known venues and defaults unknown to okx", () => {
     assert.equal(parseVenue("binance"), "binance");
     assert.equal(parseVenue("BYBIT"), "bybit");
+    assert.equal(parseVenue("all"), "all");
+    assert.equal(parseVenue("market"), "all");
     assert.equal(parseVenue("nope"), "okx");
     assert.equal(parseVenue(undefined), "okx");
+  });
+
+  it("consensus uses live majority, not a blend of candles", () => {
+    const row = (venue: "okx" | "binance" | "bybit", g: number, source: "okx" | "binance" | "demo") => ({
+      venue,
+      source,
+      g,
+      spotShare: 50 * (1 - g),
+      perpShare: 50 * (1 + g),
+      coupling: "quiet" as const,
+      spotPull: 0,
+      perpPull: 0,
+      confidence: 0.7,
+      spot: 100,
+    });
+    const split = decideConsensus([
+      row("okx", -0.4, "okx"),
+      row("binance", 0.5, "binance"),
+      row("bybit", 0.1, "demo"),
+    ]);
+    assert.equal(split.id, "split");
+    assert.equal(split.live, 2);
+
+    const spot = decideConsensus([
+      row("okx", -0.4, "okx"),
+      row("binance", -0.3, "binance"),
+      row("bybit", 0.8, "demo"),
+    ]);
+    assert.equal(spot.id, "agree_spot");
+    assert.ok(spot.g < 0);
+
+    const thin = decideConsensus([row("okx", 0.5, "okx"), row("binance", -0.4, "demo")]);
+    assert.equal(thin.id, "quiet");
+    assert.equal(thin.live, 1);
   });
 });

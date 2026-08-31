@@ -30,14 +30,25 @@ npm run dev
 
 ```
 GET /api/gravity?symbol=BTC&interval=5m&window=48&venue=okx
+GET /api/gravity?symbol=BTC&interval=5m&window=48&venue=all
+GET /api/venues
 ```
 
-`venue`: okx, binance, bybit  
+`venue`: okx, binance, bybit, **all** (консенсус)  
 `symbol`: BTC, ETH, SOL, XRP, DOGE, BNB  
 `interval`: 1m, 5m, 15m, 1H, 4H  
 `window`: 24, 48, 96 баров
 
-Адаптеры в [`src/lib/venues/`](src/lib/venues): общий `Bar[]` → тот же GDI-1.3. Новая биржа = новый файл адаптера, без правки формул.
+`venue=all` — не смесь свечей. Считается G каждой биржи, потом **медиана live-питов** и большинство 2 из 3. Демо-поток в голосование не входит.
+
+Новая биржа — адаптер `fetch(symbol, interval, window) → { bars, funding, premium, oiUsd }` и одна строка:
+
+```ts
+import { registerVenue } from "./lib/venues";
+registerVenue({ id: "kraken", fetch: fetchKraken });
+```
+
+Список питов: `GET /api/venues`.
 
 ## Стек
 

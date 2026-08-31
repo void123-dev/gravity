@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiGravityRouteImport } from './routes/api/gravity'
+import { Route as ApiVenuesRouteImport } from './routes/api/venues'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,40 @@ const ApiGravityRoute = ApiGravityRouteImport.update({
   path: '/api/gravity',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiVenuesRoute = ApiVenuesRouteImport.update({
+  id: '/api/venues',
+  path: '/api/venues',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/gravity': typeof ApiGravityRoute
+  '/api/venues': typeof ApiVenuesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/gravity': typeof ApiGravityRoute
+  '/api/venues': typeof ApiVenuesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/gravity': typeof ApiGravityRoute
+  '/api/venues': typeof ApiVenuesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/gravity'
+  fullPaths: '/' | '/api/gravity' | '/api/venues'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/gravity'
-  id: '__root__' | '/' | '/api/gravity'
+  to: '/' | '/api/gravity' | '/api/venues'
+  id: '__root__' | '/' | '/api/gravity' | '/api/venues'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiGravityRoute: typeof ApiGravityRoute
+  ApiVenuesRoute: typeof ApiVenuesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGravityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/venues': {
+      id: '/api/venues'
+      path: '/api/venues'
+      fullPath: '/api/venues'
+      preLoaderRoute: typeof ApiVenuesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiGravityRoute: ApiGravityRoute,
+  ApiVenuesRoute: ApiVenuesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

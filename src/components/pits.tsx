@@ -1,14 +1,16 @@
-import { VENUES, type VenueId } from "@/lib/types";
+import { PIT_ALL, VENUES, type PitId } from "@/lib/types";
 import { type Lang, ui, venueBooks, venueLabel } from "@/lib/copy";
 import { cn } from "@/lib/utils";
+
+const DOCK: PitId[] = [...VENUES, PIT_ALL];
 
 export function PitDock({
   venue,
   onChange,
   lang,
 }: {
-  venue: VenueId;
-  onChange: (id: VenueId) => void;
+  venue: PitId;
+  onChange: (id: PitId) => void;
   lang: Lang;
 }) {
   const t = ui[lang];
@@ -18,8 +20,8 @@ export function PitDock({
         <p className="text-xs tracking-wide text-subtle">{t.pits}</p>
         <p className="max-w-xl text-xs text-muted text-pretty">{t.pitsHint}</p>
       </div>
-      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-        {VENUES.map((id) => {
+      <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
+        {DOCK.map((id) => {
           const on = id === venue;
           return (
             <button

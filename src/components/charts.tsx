@@ -11,7 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { format } from "date-fns";
-import type { GravityPoint, Interval } from "@/lib/types";
+import type { GravityPoint, Interval, PitRow } from "@/lib/types";
 import type { Lang } from "@/lib/copy";
 import { ui } from "@/lib/copy";
 import { formatBps, formatPx, formatUsdCompact } from "@/lib/utils";
@@ -195,6 +195,78 @@ export function GravityChart({ series, interval, lang }: Props) {
             fillOpacity={0.55}
             isAnimationActive={false}
           />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function pitStroke(id: string): string {
+  if (id === "okx") return "var(--color-spot)";
+  if (id === "binance") return "var(--color-perp)";
+  if (id === "bybit") return "var(--color-fg)";
+  return "var(--color-muted)";
+}
+
+export function PitGChart({
+  series,
+  interval,
+  pits,
+  lang,
+}: {
+  series: GravityPoint[];
+  interval: Interval;
+  pits: PitRow[];
+  lang: Lang;
+}) {
+  const t = ui[lang];
+  const ids = pits.map((p) => p.venue);
+  const data = series.map((p) => ({ t: p.t, g: p.g, ...(p.pits ?? {}) }));
+  return (
+    <div className="h-48 w-full min-w-0 sm:h-56">
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid stroke="var(--color-grid)" vertical={false} />
+          <XAxis
+            dataKey="t"
+            tickFormatter={(v: number) => tickTime(v, interval)}
+            tick={{ fill: "var(--color-subtle)", fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            minTickGap={28}
+          />
+          <YAxis
+            domain={[-1, 1]}
+            ticks={[-1, 0, 1]}
+            tick={{ fill: "var(--color-subtle)", fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            width={36}
+          />
+          <Tooltip content={<ChartTip lang={lang} />} cursor={{ stroke: "var(--color-border-strong)" }} />
+          <ReferenceLine y={0} stroke="var(--color-border-strong)" />
+          <Line
+            type="monotone"
+            dataKey="g"
+            name={t.medianG}
+            stroke="var(--color-accent)"
+            strokeWidth={2}
+            dot={false}
+            isAnimationActive={false}
+          />
+          {ids.map((id) => (
+            <Line
+              key={id}
+              type="monotone"
+              dataKey={id}
+              name={id}
+              stroke={pitStroke(id)}
+              strokeWidth={1.2}
+              strokeOpacity={0.85}
+              dot={false}
+              isAnimationActive={false}
+            />
+          ))}
         </ComposedChart>
       </ResponsiveContainer>
     </div>

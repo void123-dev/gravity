@@ -1,4 +1,4 @@
-import type { GravitySnapshot, Interval, SymbolCode, VenueId } from "./types";
+import type { GravitySnapshot, Interval, PitId, SymbolCode } from "./types";
 
 export const GRAVITY_POLL_MS = 15_000;
 
@@ -12,7 +12,7 @@ export async function fetchGravity(input: {
   symbol: SymbolCode;
   interval: Interval;
   window: number;
-  venue: VenueId;
+  venue: PitId;
 }): Promise<GravitySnapshot> {
   const params = new URLSearchParams({
     symbol: input.symbol,

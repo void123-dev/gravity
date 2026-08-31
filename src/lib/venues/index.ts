@@ -1,42 +1,44 @@
 import { computeGravity } from "../gravity";
-import type { GravitySnapshot, Interval, SymbolCode, VenueId } from "../types";
-import { fetchBinance } from "./binance";
-import { fetchBybit } from "./bybit";
+import type { GravitySnapshot, Interval, PitId, SymbolCode, VenueId } from "../types";
+import { buildConsensus } from "./consensus";
 import { buildDemo } from "./demo";
-import { fetchOkx } from "./okx";
-import { parseVenue, type Adapter } from "./shared";
+import { getAdapter, listVenueIds, listVenuePlugins, registerVenue } from "./registry";
+import { parseVenue as parseKnown } from "./shared";
+
+export { registerVenue, listVenueIds, listVenuePlugins };
+export { decideConsensus } from "./consensus";
 
 const TTL_MS = 12_000;
 const cache = new Map<string, { at: number; data: GravitySnapshot }>();
 
-const ADAPTERS: Record<VenueId, Adapter> = {
-  okx: fetchOkx,
-  binance: fetchBinance,
-  bybit: fetchBybit,
-};
+export function parseVenue(raw: unknown): PitId {
+  const v = String(raw ?? "okx").toLowerCase();
+  if (v === "all" || v === "consensus" || v === "market") return "all";
+  if (getAdapter(v)) return v as VenueId;
+  return parseKnown(raw);
+}
 
-export { parseVenue };
-
-export async function loadGravity(input: {
+async function loadPit(input: {
   symbol: SymbolCode;
   interval: Interval;
   window: number;
-  venue?: VenueId | string;
+  venue: VenueId;
 }): Promise<GravitySnapshot> {
-  const venue = parseVenue(input.venue);
-  const key = `${venue}:${input.symbol}:${input.interval}:${input.window}`;
+  const key = `${input.venue}:${input.symbol}:${input.interval}:${input.window}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < TTL_MS) return hit.data;
 
+  const fetch = getAdapter(input.venue);
   try {
-    const feed = await ADAPTERS[venue](input.symbol, input.interval, input.window);
+    if (!fetch) throw new Error(`no adapter ${input.venue}`);
+    const feed = await fetch(input.symbol, input.interval, input.window);
     const data = computeGravity({
       bars: feed.bars,
       window: input.window,
       symbol: input.symbol,
       interval: input.interval,
-      venue,
-      source: venue,
+      venue: input.venue,
+      source: input.venue,
       funding: feed.funding,
       premium: feed.premium,
       oiUsd: feed.oiUsd,
@@ -44,8 +46,36 @@ export async function loadGravity(input: {
     cache.set(key, { at: Date.now(), data });
     return data;
   } catch {
-    const data = buildDemo(venue, input.symbol, input.interval, input.window);
+    const data = buildDemo(input.venue, input.symbol, input.interval, input.window);
     cache.set(key, { at: Date.now(), data });
     return data;
   }
+}
+
+async function loadBoard(input: {
+  symbol: SymbolCode;
+  interval: Interval;
+  window: number;
+}): Promise<GravitySnapshot> {
+  const key = `all:${input.symbol}:${input.interval}:${input.window}`;
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < TTL_MS) return hit.data;
+  const ids = listVenueIds();
+  const snaps = await Promise.all(
+    ids.map((venue) => loadPit({ ...input, venue })),
+  );
+  const data = buildConsensus(snaps);
+  cache.set(key, { at: Date.now(), data });
+  return data;
+}
+
+export async function loadGravity(input: {
+  symbol: SymbolCode;
+  interval: Interval;
+  window: number;
+  venue?: PitId | string;
+}): Promise<GravitySnapshot> {
+  const venue = parseVenue(input.venue);
+  if (venue === "all") return loadBoard(input);
+  return loadPit({ ...input, venue });
 }

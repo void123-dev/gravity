@@ -1,5 +1,15 @@
 import { intervalMs } from "./gravity";
-import type { CouplingId, DataSource, GravitySnapshot, Interval, NetAgree, PullDir, RegimeId, VenueId } from "./types";
+import type {
+  ConsensusId,
+  CouplingId,
+  DataSource,
+  GravitySnapshot,
+  Interval,
+  NetAgree,
+  PitId,
+  PullDir,
+  RegimeId,
+} from "./types";
 import { formatPct, formatUsdCompact } from "./utils";
 
 export type Lang = "ru" | "en";
@@ -89,6 +99,16 @@ export const ui = {
     pitOkxBooks: "USDT спот · swap",
     pitBinanceBooks: "USDT спот · USD-M",
     pitBybitBooks: "USDT спот · linear",
+    pitAll: "Рынок",
+    pitAllBooks: "консенсус питов",
+    consensus: "Консенсус",
+    consensusLive: "live питов",
+    agreeSpot: "Питы согласны: спот",
+    agreePerp: "Питы согласны: перпы",
+    pitsSplit: "Питы спорят",
+    pitsQuiet: "Нет большинства",
+    pitsChart: "G по питам",
+    medianG: "медиана G",
     confidence: "Уверенность",
     basis: "Базис",
     funding: "Funding",
@@ -166,6 +186,16 @@ export const ui = {
     pitOkxBooks: "USDT spot · swap",
     pitBinanceBooks: "USDT spot · USD-M",
     pitBybitBooks: "USDT spot · linear",
+    pitAll: "Market",
+    pitAllBooks: "pit consensus",
+    consensus: "Consensus",
+    consensusLive: "live pits",
+    agreeSpot: "Pits agree: spot",
+    agreePerp: "Pits agree: perps",
+    pitsSplit: "Pits disagree",
+    pitsQuiet: "No majority",
+    pitsChart: "G by pit",
+    medianG: "median G",
     confidence: "Confidence",
     basis: "Basis",
     funding: "Funding",
@@ -244,25 +274,38 @@ export function agreeLabel(lang: Lang, id: NetAgree): string {
   return t.agreeWeak;
 }
 
-export function venueLabel(lang: Lang, id: VenueId | undefined): string {
+export function venueLabel(lang: Lang, id: PitId | undefined): string {
   const t = ui[lang];
+  if (id === "all") return t.pitAll;
   if (id === "binance") return t.pitBinance;
   if (id === "bybit") return t.pitBybit;
-  return t.pitOkx;
+  if (id === "okx") return t.pitOkx;
+  return String(id).toUpperCase();
 }
 
-export function venueBooks(lang: Lang, id: VenueId): string {
+export function venueBooks(lang: Lang, id: PitId): string {
   const t = ui[lang];
+  if (id === "all") return t.pitAllBooks;
   if (id === "binance") return t.pitBinanceBooks;
   if (id === "bybit") return t.pitBybitBooks;
-  return t.pitOkxBooks;
+  if (id === "okx") return t.pitOkxBooks;
+  return id;
 }
 
-export function sourceLabel(lang: Lang, source: DataSource | undefined, venue?: VenueId): string {
+export function sourceLabel(lang: Lang, source: DataSource | undefined, venue?: PitId): string {
   const t = ui[lang];
+  if (source === "consensus" || venue === "all") return t.consensus;
   const name = venueLabel(lang, venue ?? (source === "demo" || !source ? "okx" : source));
   if (!source || source === "demo") return `${t.demo} · ${name}`;
   return `${name} ${t.live}`;
+}
+
+export function consensusLabel(lang: Lang, id: ConsensusId | undefined): string {
+  const t = ui[lang];
+  if (id === "agree_spot") return t.agreeSpot;
+  if (id === "agree_perp") return t.agreePerp;
+  if (id === "split") return t.pitsSplit;
+  return t.pitsQuiet;
 }
 
 export function flowHint(flow: number, lang: Lang): string {
@@ -370,7 +413,22 @@ export function volumeBlurb(data: GravitySnapshot, lang: Lang): string {
   return `Activity on ${tf} (vs own average) ${split}. USDT notional ${raw} — perps almost always print more; that is not influence. Spot ${s} (last bar ${sd} vs average), perps ${p} (${pd}).`;
 }
 
+export function consensusVerdict(data: GravitySnapshot, lang: Lang): string {
+  const tf = tfPhrase(data.interval, data.window, lang);
+  const head = consensusLabel(lang, data.consensus);
+  const live = data.consensusLive ?? 0;
+  const n = data.pits?.length ?? 0;
+  const bits = (data.pits ?? [])
+    .map((p) => `${venueLabel(lang, p.venue)} ${p.g >= 0 ? "+" : ""}${p.g.toFixed(2)}${p.source === "demo" ? " demo" : ""}`)
+    .join(", ");
+  if (lang === "ru") {
+    return `На ${tf} ${head.toLowerCase()}. Медиана G ${data.g >= 0 ? "+" : ""}${data.g.toFixed(2)} (спот/перпы ${data.spotShare.toFixed(0)}/${data.perpShare.toFixed(0)}). Голосуют live-питы (${live} из ${n}), демо не входит в большинство. ${bits}. Это не смесь свечей.`;
+  }
+  return `On ${tf}: ${head.toLowerCase()}. Median G ${data.g >= 0 ? "+" : ""}${data.g.toFixed(2)} (spot/perps ${data.spotShare.toFixed(0)}/${data.perpShare.toFixed(0)}). Live pits vote (${live} of ${n}); demo does not count toward majority. ${bits}. Not blended candles.`;
+}
+
 export function verdict(data: GravitySnapshot, lang: Lang): string {
+  if (data.venue === "all") return consensusVerdict(data, lang);
   const t = ui[lang];
   const tf = tfPhrase(data.interval, data.window, lang);
   const split = `${data.spotShare.toFixed(0)}/${data.perpShare.toFixed(0)}`;
@@ -450,7 +508,7 @@ export const METHOD = {
     net: "Результирующий вектор",
     netd: "Сумма векторов спота и перпов. Синхронно вверх — один большой зелёный. Синхронно вниз — красный. Борьба — взаимовычет, нетто короткий. Рядом цена 1 бар назад на выбранном ТФ: совпал ли знак нетто с ходом бара.",
     pits: "Питы",
-    pitsd: "Один пит = одна биржа. GDI всегда внутри неё: её спот против её перпов. Смешивать OKX-спот с Binance-перпами — другая задача, и это ломало бы индекс. Публичные свечи, OI и taker; ключи аккаунта не нужны.",
+    pitsd: "Один пит = одна биржа. GDI всегда внутри неё. Режим Рынок — медиана G live-питов и большинство 2 из 3, не смесь свечей. Новая биржа: registerVenue({ id, fetch }) и GET /api/gravity?venue=id.",
     read: "G ∈ [−1, +1]. Отрицательный — спот. Положительный — перпы. Доля влияния = 50 ± 50·G — это не доля оборота. Вектор площадки ∈ [−1, +1]: минус вниз, плюс вверх. Объём масштабирует силу, не знак.",
     kata: "Для kScript / Kata: residual = r_venue − r_mid, deadzone 0.18σ. Taker imb × volImpulse. eqShare = rel_s / (rel_s+rel_p). OI = |ΔOI| × tanh(perpImp−spotImp). Базис: z(Δbasis) + sign(Δpx)·Δbasis, не уровень премии. Веса 0.27 / 0.26 / 0.22 / 0.13 / 0.12.",
   },
@@ -474,7 +532,7 @@ export const METHOD = {
     net: "Resultant vector",
     netd: "Sum of the spot and perp vectors. Sync up — one large green. Sync down — red. Fight — they cancel, net is short. Beside it: price 1 bar ago on the selected TF, so you can see whether net sign matches the bar.",
     pits: "Pits",
-    pitsd: "One pit = one exchange. GDI always stays inside it: that venue's spot vs that venue's perps. Mixing OKX spot with Binance perps would break the index. Public candles, OI and taker; account keys are not required.",
+    pitsd: "One pit = one exchange. GDI stays inside it. Market mode is the median live-pit G and a 2-of-3 majority — not blended candles. New venue: registerVenue({ id, fetch }) then GET /api/gravity?venue=id.",
     read: "G ∈ [−1, +1]. Negative = spot. Positive = perps. Influence share = 50 ± 50·G — not turnover share. Venue vector ∈ [−1, +1]: minus down, plus up. Volume scales magnitude, not sign.",
     kata: "For kScript / Kata: residual = r_venue − r_mid, deadzone 0.18σ. Taker imb × volImpulse. eqShare = rel_s / (rel_s+rel_p). OI = |ΔOI| × tanh(perpImp−spotImp). Basis: z(Δbasis) + sign(Δpx)·Δbasis, not premium level. Weights 0.27 / 0.26 / 0.22 / 0.13 / 0.12.",
   },

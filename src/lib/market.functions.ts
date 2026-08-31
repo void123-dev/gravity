@@ -1,12 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
-import { INTERVALS, SYMBOLS, WINDOWS, type Interval, type SymbolCode, type VenueId } from "./types";
+import { INTERVALS, SYMBOLS, WINDOWS, type Interval, type PitId, type SymbolCode } from "./types";
 import { parseVenue } from "./venues";
 
 function parseInput(raw: unknown): {
   symbol: SymbolCode;
   interval: Interval;
   window: number;
-  venue: VenueId;
+  venue: PitId;
 } {
   const data = (raw ?? {}) as Record<string, unknown>;
   const symbolRaw = String(data.symbol ?? "BTC").toUpperCase();

@@ -9,7 +9,9 @@ export type WindowSize = (typeof WINDOWS)[number];
 
 export const VENUES = ["okx", "binance", "bybit"] as const;
 export type VenueId = (typeof VENUES)[number];
-export type DataSource = VenueId | "demo";
+export const PIT_ALL = "all" as const;
+export type PitId = VenueId | typeof PIT_ALL;
+export type DataSource = VenueId | "demo" | "consensus";
 
 export type Leader = "spot" | "perp" | "tied";
 
@@ -86,6 +88,7 @@ export type GravityPoint = {
   perpVol: number;
   spotVolRel: number;
   perpVolRel: number;
+  pits?: Record<string, number>;
 };
 
 export type GravityComponents = {
@@ -96,12 +99,27 @@ export type GravityComponents = {
   vol: number;
 };
 
+export type ConsensusId = "agree_spot" | "agree_perp" | "split" | "quiet";
+
+export type PitRow = {
+  venue: VenueId;
+  source: DataSource;
+  g: number;
+  spotShare: number;
+  perpShare: number;
+  coupling: CouplingId;
+  spotPull: number;
+  perpPull: number;
+  confidence: number;
+  spot: number;
+};
+
 export type GravitySnapshot = {
   model: "GDI-1.3";
   symbol: SymbolCode;
   interval: Interval;
   window: number;
-  venue: VenueId;
+  venue: PitId;
   source: DataSource;
   asOf: number;
   spot: number;
@@ -129,4 +147,8 @@ export type GravitySnapshot = {
   spotVol: VenueVolume;
   perpVol: VenueVolume;
   series: GravityPoint[];
+  pits?: PitRow[];
+  consensus?: ConsensusId;
+  consensusLive?: number;
+  consensusDemo?: number;
 };

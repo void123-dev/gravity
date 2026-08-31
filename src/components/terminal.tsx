@@ -8,13 +8,14 @@ import {
   WINDOWS,
   type GravitySnapshot,
   type Interval,
+  type PitId,
   type SymbolCode,
-  type VenueId,
   type WindowSize,
 } from "@/lib/types";
 import {
   METHOD,
   type Lang,
+  consensusLabel,
   regimeLabel,
   tfShort,
   ui,
@@ -32,13 +33,14 @@ import { VolumePanel } from "@/components/volume";
 import { LiveSync } from "@/components/live-sync";
 import { TimeframeStrip } from "@/components/timeframe-strip";
 import { PitDock } from "@/components/pits";
+import { ConsensusBoard } from "@/components/consensus";
 
 export function Terminal({ initial }: { initial?: GravitySnapshot }) {
   const [lang, setLang] = useState<Lang>("ru");
   const [symbol, setSymbol] = useState<SymbolCode>("BTC");
   const [interval, setInterval] = useState<Interval>("5m");
   const [windowSize, setWindowSize] = useState<WindowSize>(48);
-  const [venue, setVenue] = useState<VenueId>(initial?.venue ?? "okx");
+  const [venue, setVenue] = useState<PitId>(initial?.venue ?? "okx");
   const [methodOpen, setMethodOpen] = useState(false);
   const [data, setData] = useState<GravitySnapshot | undefined>(
     () => initial ?? readBootSnapshot(),
@@ -178,7 +180,9 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
                 {t.leadingNow} · {data.interval}
               </p>
               <p className="mt-1 font-display text-xl text-fg">
-                {regimeLabel(lang, data.regime)}
+                {data.venue === "all"
+                  ? consensusLabel(lang, data.consensus)
+                  : regimeLabel(lang, data.regime)}
               </p>
               <GravityGauge
                 g={data.g}
@@ -220,24 +224,39 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
                   tone={data.basisBps >= 0 ? "perp" : "spot"}
                 />
                 <Stat label={t.funding} value={formatFunding(data.funding ?? NaN)} />
-                <Stat
-                  label={t.oiDelta}
-                  value={formatPct(data.oiDeltaPct ?? NaN)}
-                  hint={data.oiUsd ? formatUsdCompact(data.oiUsd) : undefined}
-                  tone={(data.oiDeltaPct ?? 0) >= 0 ? "up" : "down"}
-                />
+                {data.venue === "all" ? (
+                  <Stat
+                    label={t.consensusLive}
+                    value={`${data.consensusLive ?? 0}/${data.pits?.length ?? 0}`}
+                  />
+                ) : (
+                  <Stat
+                    label={t.oiDelta}
+                    value={formatPct(data.oiDeltaPct ?? NaN)}
+                    hint={data.oiUsd ? formatUsdCompact(data.oiUsd) : undefined}
+                    tone={(data.oiDeltaPct ?? 0) >= 0 ? "up" : "down"}
+                  />
+                )}
               </div>
-              <div className="rounded-xl bg-surface p-5 shadow-border">
-                <p className="mb-4 text-xs tracking-wide text-subtle">{t.components}</p>
-                <Contributions components={data.components} lang={lang} />
-              </div>
+              {data.venue === "all" ? null : (
+                <div className="rounded-xl bg-surface p-5 shadow-border">
+                  <p className="mb-4 text-xs tracking-wide text-subtle">{t.components}</p>
+                  <Contributions components={data.components} lang={lang} />
+                </div>
+              )}
             </div>
           </section>
 
-          <PullVectors data={data} lang={lang} />
+          {data.venue === "all" ? (
+            <ConsensusBoard data={data} lang={lang} />
+          ) : (
+            <>
+              <PullVectors data={data} lang={lang} />
+              <VolumePanel data={data} lang={lang} />
+            </>
+          )}
 
-          <VolumePanel data={data} lang={lang} />
-
+          {data.venue === "all" ? null : (
           <section className="rounded-xl bg-surface p-4 shadow-border sm:p-5">
             <div className="mb-3 flex items-baseline justify-between gap-3">
               <p className="text-xs tracking-wide text-subtle">
@@ -255,6 +274,7 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
             <p className="mt-4 mb-2 text-xs tracking-wide text-subtle">{t.ribbon}</p>
             <DiscoveryRibbon series={data.series} />
           </section>
+          )}
 
           <section className="rounded-xl bg-surface p-5 shadow-border">
             <TimeframeStrip

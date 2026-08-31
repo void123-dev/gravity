@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { GRAVITY_POLL_MS } from "@/lib/query-gravity";
 import { cn, clamp } from "@/lib/utils";
 import { type Lang, sourceLabel, ui } from "@/lib/copy";
-import type { DataSource, VenueId } from "@/lib/types";
+import type { DataSource, PitId } from "@/lib/types";
 
 function useNow(resetKey: number): number | null {
   const [now, setNow] = useState<number | null>(null);
@@ -25,7 +25,7 @@ export function LiveSync({
   updatedAt: number;
   fetching: boolean;
   source?: DataSource;
-  venue?: VenueId;
+  venue?: PitId;
   lang: Lang;
   onRefresh: () => void;
 }) {
