@@ -1,0 +1,127 @@
+export const SYMBOLS = ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB"] as const;
+export type SymbolCode = (typeof SYMBOLS)[number];
+
+export const INTERVALS = ["1m", "5m", "15m", "1H", "4H"] as const;
+export type Interval = (typeof INTERVALS)[number];
+
+export const WINDOWS = [24, 48, 96] as const;
+export type WindowSize = (typeof WINDOWS)[number];
+
+export type Leader = "spot" | "perp" | "tied";
+
+export type PullDir = "up" | "down" | "flat";
+
+export type CouplingId =
+  | "sync_up"
+  | "sync_down"
+  | "fight"
+  | "spot_alone"
+  | "perp_alone"
+  | "quiet";
+
+export type VenuePull = {
+  dir: PullDir;
+  score: number;
+  retPct: number;
+  flow: number;
+  buy: number;
+  sell: number;
+};
+
+export type VenueVolume = {
+  total: number;
+  last: number;
+  avg: number;
+  deltaPct: number;
+  share: number;
+  eqShare: number;
+};
+
+export type RegimeId =
+  | "lev_rally"
+  | "short_squeeze"
+  | "short_dump"
+  | "long_liq"
+  | "spot_bid"
+  | "spot_offer"
+  | "coupled";
+
+export type Bar = {
+  t: number;
+  spot: number;
+  perp: number;
+  spotVol: number;
+  perpVol: number;
+  oi?: number;
+  spotBuy?: number;
+  spotSell?: number;
+  perpBuy?: number;
+  perpSell?: number;
+};
+
+export type NetAgree = "hit" | "miss" | "weak";
+
+export type NetPull = {
+  score: number;
+  dir: PullDir;
+  agree: NetAgree;
+};
+
+export type GravityPoint = {
+  t: number;
+  spot: number;
+  perp: number;
+  basisBps: number;
+  g: number;
+  spotShare: number;
+  perpShare: number;
+  spotPull: number;
+  perpPull: number;
+  netPull: number;
+  spotVol: number;
+  perpVol: number;
+  spotVolRel: number;
+  perpVolRel: number;
+};
+
+export type GravityComponents = {
+  lead: number;
+  basis: number;
+  flow: number;
+  oi: number;
+  vol: number;
+};
+
+export type GravitySnapshot = {
+  model: "GDI-1.3";
+  symbol: SymbolCode;
+  interval: Interval;
+  window: number;
+  source: "okx" | "demo";
+  asOf: number;
+  spot: number;
+  perp: number;
+  basisBps: number;
+  funding: number | null;
+  premium: number | null;
+  oiUsd: number | null;
+  oiDeltaPct: number | null;
+  g: number;
+  spotShare: number;
+  perpShare: number;
+  confidence: number;
+  lag: { leader: Leader; bars: number };
+  components: GravityComponents;
+  regime: RegimeId;
+  priceChangePct: number;
+  spotPull: VenuePull;
+  perpPull: VenuePull;
+  coupling: CouplingId;
+  couplingScore: number;
+  netPull: NetPull;
+  prevPx: number;
+  barRetPct: number;
+  spotVol: VenueVolume;
+  perpVol: VenueVolume;
+  series: GravityPoint[];
+};
