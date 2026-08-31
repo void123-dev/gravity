@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { INTERVALS, SYMBOLS, WINDOWS, type Interval, type SymbolCode } from "@/lib/types";
+import { parseVenue } from "@/lib/venues";
 
 function parse(url: URL): {
   symbol: SymbolCode;
   interval: Interval;
   window: number;
+  venue: ReturnType<typeof parseVenue>;
 } {
   const symbolRaw = (url.searchParams.get("symbol") ?? "BTC").toUpperCase();
   const intervalRaw = url.searchParams.get("interval") ?? "5m";
@@ -16,14 +18,14 @@ function parse(url: URL): {
     ? (intervalRaw as Interval)
     : "5m";
   const window = (WINDOWS as readonly number[]).includes(windowRaw) ? windowRaw : 48;
-  return { symbol, interval, window };
+  return { symbol, interval, window, venue: parseVenue(url.searchParams.get("venue")) };
 }
 
 export const Route = createFileRoute("/api/gravity")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const { loadGravity } = await import("@/lib/okx.server");
+        const { loadGravity } = await import("@/lib/venues");
         const data = await loadGravity(parse(new URL(request.url)));
         return Response.json(data);
       },

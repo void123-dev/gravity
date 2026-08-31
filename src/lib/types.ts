@@ -7,6 +7,10 @@ export type Interval = (typeof INTERVALS)[number];
 export const WINDOWS = [24, 48, 96] as const;
 export type WindowSize = (typeof WINDOWS)[number];
 
+export const VENUES = ["okx", "binance", "bybit"] as const;
+export type VenueId = (typeof VENUES)[number];
+export type DataSource = VenueId | "demo";
+
 export type Leader = "spot" | "perp" | "tied";
 
 export type PullDir = "up" | "down" | "flat";
@@ -97,7 +101,8 @@ export type GravitySnapshot = {
   symbol: SymbolCode;
   interval: Interval;
   window: number;
-  source: "okx" | "demo";
+  venue: VenueId;
+  source: DataSource;
   asOf: number;
   spot: number;
   perp: number;

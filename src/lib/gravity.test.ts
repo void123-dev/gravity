@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { computeGravity } from "./gravity.ts";
 import type { Bar } from "./types.ts";
+import { parseVenue } from "./venues/shared.ts";
 
 function makeBars(opts: {
   n?: number;
@@ -50,6 +51,7 @@ function snap(bars: Bar[]) {
     window: 48,
     symbol: "BTC",
     interval: "5m",
+    venue: "okx",
     source: "demo",
     funding: 0,
     premium: 0,
@@ -134,5 +136,14 @@ describe("GDI-1.3 equalization", () => {
     assert.ok(Math.abs(d.components.basis) < 0.22, `basis ${d.components.basis}`);
     assert.ok(Math.abs(d.components.oi) < 0.08, `oi ${d.components.oi}`);
     assert.ok(Math.abs(d.g) < 0.22, `G ${d.g}`);
+  });
+});
+
+describe("venue pits", () => {
+  it("parses known venues and defaults unknown to okx", () => {
+    assert.equal(parseVenue("binance"), "binance");
+    assert.equal(parseVenue("BYBIT"), "bybit");
+    assert.equal(parseVenue("nope"), "okx");
+    assert.equal(parseVenue(undefined), "okx");
   });
 });

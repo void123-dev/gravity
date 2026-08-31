@@ -2,6 +2,7 @@ import { clamp, fin } from "./utils.ts";
 import type {
   Bar,
   CouplingId,
+  DataSource,
   GravityComponents,
   GravityPoint,
   GravitySnapshot,
@@ -12,6 +13,7 @@ import type {
   PullDir,
   RegimeId,
   SymbolCode,
+  VenueId,
   VenuePull,
   VenueVolume,
 } from "./types.ts";
@@ -520,12 +522,13 @@ export function computeGravity(input: {
   window: number;
   symbol: SymbolCode;
   interval: Interval;
-  source: "okx" | "demo";
+  source: DataSource;
+  venue: VenueId;
   funding: number | null;
   premium: number | null;
   oiUsd: number | null;
 }): GravitySnapshot {
-  const { bars, window, symbol, interval, source } = input;
+  const { bars, window, symbol, interval, source, venue } = input;
   const w = clamp(Math.floor(window), 16, 120);
   if (bars.length < 10) {
     throw new Error("Not enough bars to compute GRAVITY");
@@ -608,6 +611,7 @@ export function computeGravity(input: {
     symbol,
     interval,
     window: w,
+    venue,
     source,
     asOf: last.t,
     spot: last.spot,

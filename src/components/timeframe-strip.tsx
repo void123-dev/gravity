@@ -1,6 +1,6 @@
 import { useQueries } from "@tanstack/react-query";
 import { fetchGravity, GRAVITY_POLL_MS } from "@/lib/query-gravity";
-import { INTERVALS, type Interval, type SymbolCode, type WindowSize } from "@/lib/types";
+import { INTERVALS, type Interval, type SymbolCode, type VenueId, type WindowSize } from "@/lib/types";
 import { type Lang, couplingShort, ui } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 import type { CouplingId } from "@/lib/types";
@@ -9,20 +9,22 @@ export function TimeframeStrip({
   symbol,
   interval,
   windowSize,
+  venue,
   lang,
   onPick,
 }: {
   symbol: SymbolCode;
   interval: Interval;
   windowSize: WindowSize;
+  venue: VenueId;
   lang: Lang;
   onPick: (iv: Interval) => void;
 }) {
   const t = ui[lang];
   const queries = useQueries({
     queries: INTERVALS.map((iv) => ({
-      queryKey: ["gravity", symbol, iv, windowSize],
-      queryFn: () => fetchGravity({ symbol, interval: iv, window: windowSize }),
+      queryKey: ["gravity", venue, symbol, iv, windowSize],
+      queryFn: () => fetchGravity({ symbol, interval: iv, window: windowSize, venue }),
       staleTime: 10_000,
       refetchInterval: GRAVITY_POLL_MS,
     })),

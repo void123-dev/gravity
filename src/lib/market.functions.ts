@@ -1,10 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
-import { INTERVALS, SYMBOLS, WINDOWS, type Interval, type SymbolCode } from "./types";
+import { INTERVALS, SYMBOLS, WINDOWS, type Interval, type SymbolCode, type VenueId } from "./types";
+import { parseVenue } from "./venues";
 
 function parseInput(raw: unknown): {
   symbol: SymbolCode;
   interval: Interval;
   window: number;
+  venue: VenueId;
 } {
   const data = (raw ?? {}) as Record<string, unknown>;
   const symbolRaw = String(data.symbol ?? "BTC").toUpperCase();
@@ -16,15 +18,14 @@ function parseInput(raw: unknown): {
   const interval = (INTERVALS as readonly string[]).includes(intervalRaw)
     ? (intervalRaw as Interval)
     : "5m";
-  const window = (WINDOWS as readonly number[]).includes(windowRaw)
-    ? windowRaw
-    : 48;
-  return { symbol, interval, window };
+  const window = (WINDOWS as readonly number[]).includes(windowRaw) ? windowRaw : 48;
+  const venue = parseVenue(data.venue);
+  return { symbol, interval, window, venue };
 }
 
 export const getGravity = createServerFn({ method: "GET" })
   .validator(parseInput)
   .handler(async ({ data }) => {
-    const { loadGravity } = await import("./okx.server");
+    const { loadGravity } = await import("./venues");
     return loadGravity(data);
   });

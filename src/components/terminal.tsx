@@ -9,6 +9,7 @@ import {
   type GravitySnapshot,
   type Interval,
   type SymbolCode,
+  type VenueId,
   type WindowSize,
 } from "@/lib/types";
 import {
@@ -30,12 +31,14 @@ import { PullVectors } from "@/components/vectors";
 import { VolumePanel } from "@/components/volume";
 import { LiveSync } from "@/components/live-sync";
 import { TimeframeStrip } from "@/components/timeframe-strip";
+import { PitDock } from "@/components/pits";
 
 export function Terminal({ initial }: { initial?: GravitySnapshot }) {
   const [lang, setLang] = useState<Lang>("ru");
   const [symbol, setSymbol] = useState<SymbolCode>("BTC");
   const [interval, setInterval] = useState<Interval>("5m");
   const [windowSize, setWindowSize] = useState<WindowSize>(48);
+  const [venue, setVenue] = useState<VenueId>(initial?.venue ?? "okx");
   const [methodOpen, setMethodOpen] = useState(false);
   const [data, setData] = useState<GravitySnapshot | undefined>(
     () => initial ?? readBootSnapshot(),
@@ -49,9 +52,13 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
     document.documentElement.lang = lang;
   }, [lang]);
 
+  useEffect(() => {
+    setData((cur) => (cur?.venue === venue ? cur : undefined));
+  }, [venue]);
+
   const q = useQuery({
-    queryKey: ["gravity", symbol, interval, windowSize],
-    queryFn: () => fetchGravity({ symbol, interval, window: windowSize }),
+    queryKey: ["gravity", venue, symbol, interval, windowSize],
+    queryFn: () => fetchGravity({ symbol, interval, window: windowSize, venue }),
     refetchInterval: GRAVITY_POLL_MS,
     staleTime: 10_000,
     placeholderData: (prev) => prev,
@@ -80,6 +87,7 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
             updatedAt={syncedAt}
             fetching={q.isFetching}
             source={data?.source}
+            venue={data?.venue ?? venue}
             lang={lang}
             onRefresh={() => void q.refetch()}
           />
@@ -103,6 +111,8 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
           </div>
         </div>
       </header>
+
+      <PitDock venue={venue} onChange={setVenue} lang={lang} />
 
       <div className="flex flex-col gap-3">
         <ChipRow>
@@ -251,6 +261,7 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
               symbol={symbol}
               interval={interval}
               windowSize={windowSize}
+              venue={venue}
               lang={lang}
               onPick={setInterval}
             />
@@ -281,6 +292,7 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
                   <MethodItem title={method.w5} body={method.w5d} />
                   <MethodItem title={method.dir} body={method.dird} className="sm:col-span-2" />
                   <MethodItem title={method.net} body={method.netd} className="sm:col-span-2" />
+                  <MethodItem title={method.pits} body={method.pitsd} className="sm:col-span-2" />
                   <MethodItem title={method.vol} body={method.vold} className="sm:col-span-2" />
                 </dl>
                 <p className="text-pretty text-fg">{method.read}</p>

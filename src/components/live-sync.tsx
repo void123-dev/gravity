@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { GRAVITY_POLL_MS } from "@/lib/query-gravity";
 import { cn, clamp } from "@/lib/utils";
-import { type Lang, ui } from "@/lib/copy";
+import { type Lang, sourceLabel, ui } from "@/lib/copy";
+import type { DataSource, VenueId } from "@/lib/types";
 
 function useNow(resetKey: number): number | null {
   const [now, setNow] = useState<number | null>(null);
@@ -17,12 +18,14 @@ export function LiveSync({
   updatedAt,
   fetching,
   source,
+  venue,
   lang,
   onRefresh,
 }: {
   updatedAt: number;
   fetching: boolean;
-  source?: "okx" | "demo";
+  source?: DataSource;
+  venue?: VenueId;
   lang: Lang;
   onRefresh: () => void;
 }) {
@@ -71,7 +74,7 @@ export function LiveSync({
         />
       </span>
       <span className="font-mono tabular-nums">
-        {source === "okx" ? t.live : source === "demo" ? t.demo : t.refresh}
+        {sourceLabel(lang, source, venue)}
       </span>
       <span
         className="min-w-[2ch] font-mono tabular-nums"

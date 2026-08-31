@@ -1,5 +1,5 @@
 import { intervalMs } from "./gravity";
-import type { CouplingId, GravitySnapshot, Interval, NetAgree, PullDir, RegimeId } from "./types";
+import type { CouplingId, DataSource, GravitySnapshot, Interval, NetAgree, PullDir, RegimeId, VenueId } from "./types";
 import { formatPct, formatUsdCompact } from "./utils";
 
 export type Lang = "ru" | "en";
@@ -79,8 +79,16 @@ export const ui = {
     window: "Окно",
     interval: "Таймфрейм",
     tfScan: "Все таймфреймы",
-    live: "OKX live",
+    live: "live",
     demo: "Демо-поток",
+    pits: "Питы",
+    pitsHint: "GDI сравнивает спот и перпы одной биржи. Ключи API не нужны — публичный рынок.",
+    pitOkx: "OKX",
+    pitBinance: "Binance",
+    pitBybit: "Bybit",
+    pitOkxBooks: "USDT спот · swap",
+    pitBinanceBooks: "USDT спот · USD-M",
+    pitBybitBooks: "USDT спот · linear",
     confidence: "Уверенность",
     basis: "Базис",
     funding: "Funding",
@@ -148,8 +156,16 @@ export const ui = {
     window: "Window",
     interval: "Timeframe",
     tfScan: "All timeframes",
-    live: "OKX live",
+    live: "live",
     demo: "Demo feed",
+    pits: "Pits",
+    pitsHint: "GDI compares spot vs perps on one exchange. No API keys — public market data.",
+    pitOkx: "OKX",
+    pitBinance: "Binance",
+    pitBybit: "Bybit",
+    pitOkxBooks: "USDT spot · swap",
+    pitBinanceBooks: "USDT spot · USD-M",
+    pitBybitBooks: "USDT spot · linear",
     confidence: "Confidence",
     basis: "Basis",
     funding: "Funding",
@@ -226,6 +242,27 @@ export function agreeLabel(lang: Lang, id: NetAgree): string {
   if (id === "hit") return t.agreeHit;
   if (id === "miss") return t.agreeMiss;
   return t.agreeWeak;
+}
+
+export function venueLabel(lang: Lang, id: VenueId | undefined): string {
+  const t = ui[lang];
+  if (id === "binance") return t.pitBinance;
+  if (id === "bybit") return t.pitBybit;
+  return t.pitOkx;
+}
+
+export function venueBooks(lang: Lang, id: VenueId): string {
+  const t = ui[lang];
+  if (id === "binance") return t.pitBinanceBooks;
+  if (id === "bybit") return t.pitBybitBooks;
+  return t.pitOkxBooks;
+}
+
+export function sourceLabel(lang: Lang, source: DataSource | undefined, venue?: VenueId): string {
+  const t = ui[lang];
+  const name = venueLabel(lang, venue ?? (source === "demo" || !source ? "okx" : source));
+  if (!source || source === "demo") return `${t.demo} · ${name}`;
+  return `${name} ${t.live}`;
 }
 
 export function flowHint(flow: number, lang: Lang): string {
@@ -412,6 +449,8 @@ export const METHOD = {
     vold: "Номинал USDT — факт оборота, почти всегда 5–10% спот. Полоса «активность» — кто горячее своего обычного. В G и векторы идёт только она.",
     net: "Результирующий вектор",
     netd: "Сумма векторов спота и перпов. Синхронно вверх — один большой зелёный. Синхронно вниз — красный. Борьба — взаимовычет, нетто короткий. Рядом цена 1 бар назад на выбранном ТФ: совпал ли знак нетто с ходом бара.",
+    pits: "Питы",
+    pitsd: "Один пит = одна биржа. GDI всегда внутри неё: её спот против её перпов. Смешивать OKX-спот с Binance-перпами — другая задача, и это ломало бы индекс. Публичные свечи, OI и taker; ключи аккаунта не нужны.",
     read: "G ∈ [−1, +1]. Отрицательный — спот. Положительный — перпы. Доля влияния = 50 ± 50·G — это не доля оборота. Вектор площадки ∈ [−1, +1]: минус вниз, плюс вверх. Объём масштабирует силу, не знак.",
     kata: "Для kScript / Kata: residual = r_venue − r_mid, deadzone 0.18σ. Taker imb × volImpulse. eqShare = rel_s / (rel_s+rel_p). OI = |ΔOI| × tanh(perpImp−spotImp). Базис: z(Δbasis) + sign(Δpx)·Δbasis, не уровень премии. Веса 0.27 / 0.26 / 0.22 / 0.13 / 0.12.",
   },
@@ -434,6 +473,8 @@ export const METHOD = {
     vold: "USDT notional is turnover, almost always 5–10% spot. The activity bar is who is hotter than their own normal. Only that feeds G and the vectors.",
     net: "Resultant vector",
     netd: "Sum of the spot and perp vectors. Sync up — one large green. Sync down — red. Fight — they cancel, net is short. Beside it: price 1 bar ago on the selected TF, so you can see whether net sign matches the bar.",
+    pits: "Pits",
+    pitsd: "One pit = one exchange. GDI always stays inside it: that venue's spot vs that venue's perps. Mixing OKX spot with Binance perps would break the index. Public candles, OI and taker; account keys are not required.",
     read: "G ∈ [−1, +1]. Negative = spot. Positive = perps. Influence share = 50 ± 50·G — not turnover share. Venue vector ∈ [−1, +1]: minus down, plus up. Volume scales magnitude, not sign.",
     kata: "For kScript / Kata: residual = r_venue − r_mid, deadzone 0.18σ. Taker imb × volImpulse. eqShare = rel_s / (rel_s+rel_p). OI = |ΔOI| × tanh(perpImp−spotImp). Basis: z(Δbasis) + sign(Δpx)·Δbasis, not premium level. Weights 0.27 / 0.26 / 0.22 / 0.13 / 0.12.",
   },

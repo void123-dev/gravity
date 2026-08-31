@@ -17,7 +17,7 @@
 
 Веса GDI-1.3: lead-lag 27% · Δ базиса 26% · taker 22% · OI 13% · выровненная активность 12%. Сырой оборот перпов (~90% номинала) в индекс не идёт.
 
-Данные: живой OKX (spot + USDT-M swap). Обновление каждые 15 с.
+Данные: живой рынок выбранного **пита** (OKX / Binance / Bybit). GDI всегда внутри одной биржи: её спот против её перпов. Ключи API не нужны. Обновление каждые 15 с. Если биржа недоступна — демо-поток с пометкой.
 
 ## Запуск
 
@@ -29,20 +29,21 @@ npm run dev
 Откроется терминал на порту 8080. API:
 
 ```
-GET /api/gravity?symbol=BTC&interval=5m&window=48
+GET /api/gravity?symbol=BTC&interval=5m&window=48&venue=okx
 ```
 
+`venue`: okx, binance, bybit  
 `symbol`: BTC, ETH, SOL, XRP, DOGE, BNB  
 `interval`: 1m, 5m, 15m, 1H, 4H  
 `window`: 24, 48, 96 баров
 
-Если OKX недоступен, сервер отдаёт demo-снимок с пометкой `source: "demo"`.
+Адаптеры в [`src/lib/venues/`](src/lib/venues): общий `Bar[]` → тот же GDI-1.3. Новая биржа = новый файл адаптера, без правки формул.
 
 ## Стек
 
 TanStack Start (Vite) · React 19 · TanStack Query · Recharts.
 
-Ядро расчёта — [`src/lib/gravity.ts`](src/lib/gravity.ts), загрузка OKX — [`src/lib/okx.server.ts`](src/lib/okx.server.ts). Формулы изолированы от UI: тот же модуль можно вызвать из ASP.NET / Python, отдав ему бары `{t, spot, perp, spotVol, perpVol, oi?, buy/sell?}`.
+Ядро расчёта — [`src/lib/gravity.ts`](src/lib/gravity.ts). Площадки — [`src/lib/venues/`](src/lib/venues). Формулы изолированы от UI и от биржи.
 
 ```bash
 npm test
