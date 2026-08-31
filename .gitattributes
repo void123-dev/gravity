@@ -1,0 +1,7 @@
+# GitHub Linguist — TypeScript is the product, not the lockfile / grok chrome.
+*.ts linguist-language=TypeScript
+*.tsx linguist-language=TypeScript
+src/routeTree.gen.ts linguist-generated=true
+package-lock.json linguist-generated=true
+scripts/** linguist-vendored=true
+public/** linguist-vendored=true
