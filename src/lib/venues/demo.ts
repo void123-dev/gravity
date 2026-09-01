@@ -86,5 +86,5 @@ export function buildDemo(
     funding: (rng() - 0.45) * 0.00008,
     premium: (perp - spot) / spot,
     oiUsd: oi,
-  });
+  }) as GravitySnapshot;
 }

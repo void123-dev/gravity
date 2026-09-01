@@ -60,7 +60,7 @@ registerVenue({ id: "kraken", fetch: fetchKraken });
 
 TanStack Start (Vite) · React 19 · TanStack Query · Recharts.
 
-Core: [`src/lib/gravity.ts`](src/lib/gravity.ts). Venues: [`src/lib/venues/`](src/lib/venues). Formulas stay isolated from UI and from the exchange.
+Core: [`src/gdi/`](src/gdi) (`computeGravity`). Host venues: [`src/lib/venues/`](src/lib/venues). Formulas stay isolated from UI and from the exchange. Port Java/.NET by copying `src/gdi/` only.
 
 ```bash
 npm test

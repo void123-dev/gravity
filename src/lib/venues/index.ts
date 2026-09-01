@@ -42,7 +42,7 @@ async function loadPit(input: {
       funding: feed.funding,
       premium: feed.premium,
       oiUsd: feed.oiUsd,
-    });
+    }) as GravitySnapshot;
     cache.set(key, { at: Date.now(), data });
     return data;
   } catch {

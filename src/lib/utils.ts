@@ -1,16 +1,10 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+export { clamp, fin } from "../gdi/math.ts";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-}
-
-export function fin(n: number, fallback = 0): number {
-  return Number.isFinite(n) ? n : fallback;
-}
-
-export function clamp(n: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, n));
 }
 
 export function formatPx(n: number): string {
