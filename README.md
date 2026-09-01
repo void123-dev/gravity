@@ -1,33 +1,35 @@
 # GRAVITY
 
-**Базовая версия 1.0 · GDI-1.3**
+**Baseline 1.0 · GDI-1.3**
 
-Один индикатор price discovery: **кто сейчас ставит цену** на выбранном таймфрейме — спот или бессрочные.
+One price-discovery indicator: **who is setting the print** on the selected timeframe — spot or perpetuals.
 
-GDI — маршрутизатор ленты, не прогноз. Отрицательный G → читать спот. Положительный → перпы. Считается **внутри одной биржи** (пит). Режим **Рынок** — медиана live-G и большинство 2 из 3, не смесь свечей. Демо-пит не голосует.
+GDI is a tape router, not a forecast. Negative G → read spot. Positive G → read perps. Always computed **inside one exchange** (pit). **Market** mode is the median live-G and a 2-of-3 majority, not blended candles. Demo pits do not vote.
 
-Предиктор снят (walk-forward ~46%). **Один репозиторий — один индикатор.** Новый индикатор — новый репозиторий; стыковка позже по снимкам (`GravitySnapshot`), без чужих весов в G.
+The predictor was removed (walk-forward ~46%). **One repository, one indicator.** A new indicator is a new repo; compose later via snapshots (`GravitySnapshot`), without mixing weights into G.
 
-Правки в `main` — только через PR. См. [CONTRIBUTING.md](CONTRIBUTING.md).
+Changes land on `main` only through a PR. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Что показывает
+English only: repo docs, comments, commits, UI.
 
-| Блок | Смысл |
+## What it shows
+
+| Block | Meaning |
 | --- | --- |
-| **G** ∈ [−1, +1] | Кто открывает цену. Доля влияния = `50 ± 50·G` |
-| Векторы спот / перпы | Куда тянет площадка и сила |
-| Сцепка | Синхронно, борются, один ведёт — заголовок терминала |
-| Результирующий вектор | Сумма векторов + сверка с ценой 1 бар назад |
-| Объём | Номинал USDT vs **активность** (каждый рынок к своему среднему) |
-| Taker buy/sell | Кто снимает стакан. На перпах это не лонги/шорты |
-| Питы | Binance → Bybit → OKX (типичный оборот BTC, не live G) |
-| Рынок | Консенсус питов |
+| **G** ∈ [−1, +1] | Who discovers price. Influence share = `50 ± 50·G` |
+| Spot / perp vectors | Direction and force of each book |
+| Coupling | In sync, fighting, or one side leading — terminal headline |
+| Resultant vector | Sum of vectors + last-bar price check |
+| Volume | USDT notional vs **activity** (each market vs its own average) |
+| Taker buy/sell | Who lifts the book. On perps this is not longs vs shorts |
+| Pits | Binance → Bybit → OKX (typical BTC volume, not live G) |
+| Market | Pit consensus |
 
-Веса GDI-1.3: lead-lag 27% · Δ базиса 26% · taker 22% · OI 13% · выровненная активность 12%. Сырой оборот перпов (~90% номинала) в индекс не идёт. Уверенность следует |G| и согласию блоков, не склейке тика.
+GDI-1.3 weights: lead-lag 27% · Δ basis 26% · taker 22% · OI 13% · equalized activity 12%. Raw perp notional (~90%) never enters G. Confidence follows |G| and component agreement, not glued-tape correlation.
 
-Данные: публичный рынок выбранного пита. Ключи API не нужны. Обновление каждые 15 с. Если биржа недоступна — демо-поток с пометкой. По умолчанию открыт Binance.
+Data: public market of the selected pit. No API keys. Refresh every 15s. Unavailable venues fall back to a labeled demo feed. Default pit is Binance.
 
-## Запуск
+## Run
 
 ```bash
 npm install
@@ -45,20 +47,20 @@ GET /api/venues
 `venue`: binance, bybit, okx, **all**  
 `symbol`: BTC, ETH, SOL, XRP, DOGE, BNB  
 `interval`: 1m, 5m, 15m, 1H, 4H  
-`window`: 24, 48, 96 баров
+`window`: 24, 48, 96 bars
 
-Новая биржа — адаптер `fetch(symbol, interval, window) → { bars, funding, premium, oiUsd }`:
+New exchange — adapter `fetch(symbol, interval, window) → { bars, funding, premium, oiUsd }`:
 
 ```ts
 import { registerVenue } from "./lib/venues";
 registerVenue({ id: "kraken", fetch: fetchKraken });
 ```
 
-## Стек
+## Stack
 
 TanStack Start (Vite) · React 19 · TanStack Query · Recharts.
 
-Ядро — [`src/lib/gravity.ts`](src/lib/gravity.ts). Площадки — [`src/lib/venues/`](src/lib/venues). Формулы изолированы от UI и от биржи.
+Core: [`src/lib/gravity.ts`](src/lib/gravity.ts). Venues: [`src/lib/venues/`](src/lib/venues). Formulas stay isolated from UI and from the exchange.
 
 ```bash
 npm test
@@ -66,11 +68,11 @@ npm run typecheck
 npm run build
 ```
 
-## Чего здесь нет и не будет в этой рамке
+## Out of scope
 
-- Новых индикаторов в этом репозитории
-- Прогноза следующего бара
-- Смеси свечей разных бирж в один GDI
-- TradingView / OpenMarket как источника (GDI только говорит, чью ленту там читать)
-- Разбивки OI на лонги и шорты
-- RSI, стакан L2, соцсигналы
+- A second indicator in this repository
+- Next-bar forecasts
+- Blending candles from several exchanges into one G
+- TradingView / OpenMarket as a data source (GDI only says which tape to read there)
+- Splitting OI into longs and shorts
+- RSI, L2 book, social signals

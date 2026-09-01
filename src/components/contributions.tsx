@@ -1,18 +1,15 @@
 import { cn } from "@/lib/utils";
 import type { GravityComponents } from "@/lib/types";
-import type { Lang } from "@/lib/copy";
 import { ui } from "@/lib/copy";
 
 const KEYS = ["lead", "basis", "flow", "oi", "vol"] as const;
 
 export function Contributions({
   components,
-  lang,
-}: {
+  }: {
   components: GravityComponents;
-  lang: Lang;
-}) {
-  const t = ui[lang];
+  }) {
+  const t = ui;
   const labels: Record<(typeof KEYS)[number], string> = {
     lead: t.lead,
     basis: t.basisComp,
