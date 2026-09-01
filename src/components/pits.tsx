@@ -1,5 +1,5 @@
 import { PIT_ALL, VENUES, type PitId } from "@/lib/types";
-import { type Lang, ui, venueBooks, venueLabel } from "@/lib/copy";
+import { ui, venueBooks, venueLabel } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 
 const DOCK: PitId[] = [...VENUES, PIT_ALL];
@@ -7,13 +7,11 @@ const DOCK: PitId[] = [...VENUES, PIT_ALL];
 export function PitDock({
   venue,
   onChange,
-  lang,
-}: {
+  }: {
   venue: PitId;
   onChange: (id: PitId) => void;
-  lang: Lang;
-}) {
-  const t = ui[lang];
+  }) {
+  const t = ui;
   return (
     <section className="rounded-xl bg-surface p-3 shadow-border sm:p-4">
       <div className="flex flex-wrap items-end justify-between gap-2">
@@ -36,9 +34,9 @@ export function PitDock({
             >
               <Well on={on} />
               <span className="min-w-0">
-                <span className="block font-display text-sm text-fg">{venueLabel(lang, id)}</span>
+                <span className="block font-display text-sm text-fg">{venueLabel(id)}</span>
                 <span className="block truncate font-mono text-xs text-subtle">
-                  {venueBooks(lang, id)}
+                  {venueBooks(id)}
                 </span>
               </span>
             </button>

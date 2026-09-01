@@ -11,7 +11,6 @@ import type {
   VenueVolume,
 } from "@/lib/types";
 import {
-  type Lang,
   agreeLabel,
   couplingBlurb,
   couplingLabel,
@@ -21,9 +20,9 @@ import {
   ui,
 } from "@/lib/copy";
 
-export function PullVectors({ data, lang }: { data: GravitySnapshot; lang: Lang }) {
-  const t = ui[lang];
-  const dur = tfShort(data.interval, data.window, lang);
+export function PullVectors({ data }: { data: GravitySnapshot }) {
+  const t = ui;
+  const dur = tfShort(data.interval, data.window);
 
   return (
     <section className="rounded-xl bg-surface p-5 shadow-border sm:p-6">
@@ -33,11 +32,11 @@ export function PullVectors({ data, lang }: { data: GravitySnapshot; lang: Lang 
             {t.vectors} · {dur}
           </p>
           <p className={cn("mt-1 font-display text-xl text-fg", couplingTone(data.coupling))}>
-            {couplingLabel(lang, data.coupling)}
+            {couplingLabel(data.coupling)}
           </p>
         </div>
         <p className="max-w-xl text-sm leading-relaxed text-muted text-pretty">
-          {couplingBlurb(data, lang)}
+          {couplingBlurb(data)}
         </p>
       </div>
 
@@ -47,23 +46,21 @@ export function PullVectors({ data, lang }: { data: GravitySnapshot; lang: Lang 
           tone="spot"
           pull={data.spotPull}
           vol={data.spotVol}
-          lang={lang}
         />
         <VenueCard
           label={t.perp}
           tone="perp"
           pull={data.perpPull}
           vol={data.perpVol}
-          lang={lang}
         />
       </div>
 
-      <ResultantPanel data={data} lang={lang} />
+      <ResultantPanel data={data} />
 
-      <AlignMeter score={data.couplingScore} lang={lang} />
+      <AlignMeter score={data.couplingScore} />
 
       <p className="mt-5 mb-2 text-xs tracking-wide text-subtle">{t.pullRibbon}</p>
-      <PullRibbon series={data.series} lang={lang} />
+      <PullRibbon series={data.series} />
     </section>
   );
 }
@@ -73,15 +70,13 @@ function VenueCard({
   tone,
   pull,
   vol,
-  lang,
-}: {
+  }: {
   label: string;
   tone: "spot" | "perp";
   pull: VenuePull;
   vol: VenueVolume;
-  lang: Lang;
-}) {
-  const t = ui[lang];
+  }) {
+  const t = ui;
   return (
     <div className="rounded-lg bg-surface-2 p-4">
       <div className="flex items-start justify-between gap-3">
@@ -96,7 +91,7 @@ function VenueCard({
             )}
           >
             <DirGlyph dir={pull.dir} />
-            {pullDirLabel(lang, pull.dir)}
+            {pullDirLabel(pull.dir)}
           </p>
         </div>
         <p className={cn("font-mono text-sm tabular-nums", dirTone(pull.dir))}>
@@ -104,9 +99,9 @@ function VenueCard({
         </p>
       </div>
       <ForceBar score={pull.score} />
-      <TakerSplit pull={pull} tone={tone} lang={lang} />
+      <TakerSplit pull={pull} tone={tone} />
       <div className="mt-2 flex items-center justify-between gap-2">
-        <p className="text-xs text-muted">{flowHint(pull.flow, lang)}</p>
+        <p className="text-xs text-muted">{flowHint(pull.flow)}</p>
         <p className="font-mono text-xs tabular-nums text-subtle">
           {t.force} {pull.score >= 0 ? "+" : ""}
           {pull.score.toFixed(2)}
@@ -127,8 +122,8 @@ function VenueCard({
   );
 }
 
-function ResultantPanel({ data, lang }: { data: GravitySnapshot; lang: Lang }) {
-  const t = ui[lang];
+function ResultantPanel({ data }: { data: GravitySnapshot }) {
+  const t = ui;
   const net = data.netPull ?? fallbackNet(data);
   const prevPx = Number.isFinite(data.prevPx)
     ? data.prevPx
@@ -155,7 +150,7 @@ function ResultantPanel({ data, lang }: { data: GravitySnapshot; lang: Lang }) {
             )}
           >
             <DirGlyph dir={net.dir} />
-            {pullDirLabel(lang, net.dir)}
+            {pullDirLabel(net.dir)}
             <span className="font-mono text-base tabular-nums">
               {net.score >= 0 ? "+" : ""}
               {net.score.toFixed(2)}
@@ -184,7 +179,7 @@ function ResultantPanel({ data, lang }: { data: GravitySnapshot; lang: Lang }) {
           />
         </div>
       </div>
-      <p className={cn("mt-3 text-sm", agreeTone(net.agree))}>{agreeLabel(lang, net.agree)}</p>
+      <p className={cn("mt-3 text-sm", agreeTone(net.agree))}>{agreeLabel(net.agree)}</p>
     </div>
   );
 }
@@ -279,13 +274,11 @@ function ForceBar({ score }: { score: number }) {
 function TakerSplit({
   pull,
   tone,
-  lang,
-}: {
+  }: {
   pull: VenuePull;
   tone: "spot" | "perp";
-  lang: Lang;
-}) {
-  const t = ui[lang];
+  }) {
+  const t = ui;
   const buy = pull.buy ?? 0;
   const sell = pull.sell ?? 0;
   const tot = buy + sell;
@@ -331,8 +324,8 @@ function TakerSplit({
   );
 }
 
-function AlignMeter({ score, lang }: { score: number; lang: Lang }) {
-  const t = ui[lang];
+function AlignMeter({ score }: { score: number }) {
+  const t = ui;
   const pct = Math.min(100, Math.abs(score) * 100);
   const sync = score >= 0;
   return (
@@ -356,8 +349,8 @@ function AlignMeter({ score, lang }: { score: number; lang: Lang }) {
   );
 }
 
-function PullRibbon({ series, lang }: { series: GravityPoint[]; lang: Lang }) {
-  const t = ui[lang];
+function PullRibbon({ series }: { series: GravityPoint[] }) {
+  const t = ui;
   const slice = series.slice(-64);
   return (
     <div className="flex flex-col gap-1.5">

@@ -12,15 +12,13 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import type { GravityPoint, Interval, PitRow } from "@/lib/types";
-import type { Lang } from "@/lib/copy";
 import { ui } from "@/lib/copy";
 import { formatBps, formatPx, formatUsdCompact } from "@/lib/utils";
 
 type Props = {
   series: GravityPoint[];
   interval: Interval;
-  lang: Lang;
-};
+  };
 
 function tickTime(t: number, interval: Interval) {
   if (interval === "1H" || interval === "4H") return format(t, "MMM d HH:mm");
@@ -31,15 +29,13 @@ function ChartTip({
   active,
   payload,
   label,
-  lang,
-}: {
+  }: {
   active?: boolean;
   payload?: { name?: string; value?: number; dataKey?: string }[];
   label?: number;
-  lang: Lang;
-}) {
+  }) {
   if (!active || !payload?.length || !label) return null;
-  const t = ui[lang];
+  const t = ui;
   const row = Object.fromEntries(payload.map((p) => [String(p.dataKey), p.value]));
   return (
     <div className="rounded-lg bg-surface px-3 py-2 text-xs text-fg shadow-border">
@@ -83,8 +79,8 @@ function ChartTip({
   );
 }
 
-export function PriceChart({ series, interval, lang }: Props) {
-  const t = ui[lang];
+export function PriceChart({ series, interval }: Props) {
+  const t = ui;
   return (
     <div className="h-52 w-full min-w-0 sm:h-60">
       <ResponsiveContainer width="100%" height="100%">
@@ -118,7 +114,7 @@ export function PriceChart({ series, interval, lang }: Props) {
             width={36}
           />
           <Tooltip
-            content={<ChartTip lang={lang} />}
+            content={<ChartTip />}
             cursor={{ stroke: "var(--color-border-strong)" }}
           />
           <ReferenceLine yAxisId="bps" y={0} stroke="var(--color-border-strong)" />
@@ -146,8 +142,8 @@ export function PriceChart({ series, interval, lang }: Props) {
   );
 }
 
-export function GravityChart({ series, interval, lang }: Props) {
-  const t = ui[lang];
+export function GravityChart({ series, interval }: Props) {
+  const t = ui;
   return (
     <div className="h-44 w-full min-w-0 sm:h-52">
       <ResponsiveContainer width="100%" height="100%">
@@ -171,7 +167,7 @@ export function GravityChart({ series, interval, lang }: Props) {
             width={44}
           />
           <Tooltip
-            content={<ChartTip lang={lang} />}
+            content={<ChartTip />}
             cursor={{ stroke: "var(--color-border-strong)" }}
           />
           <ReferenceLine y={50} stroke="var(--color-border-strong)" strokeDasharray="3 4" />
@@ -212,14 +208,12 @@ export function PitGChart({
   series,
   interval,
   pits,
-  lang,
-}: {
+  }: {
   series: GravityPoint[];
   interval: Interval;
   pits: PitRow[];
-  lang: Lang;
-}) {
-  const t = ui[lang];
+  }) {
+  const t = ui;
   const ids = pits.map((p) => p.venue);
   const data = series.map((p) => ({ t: p.t, g: p.g, ...(p.pits ?? {}) }));
   return (
@@ -243,7 +237,7 @@ export function PitGChart({
             tickLine={false}
             width={36}
           />
-          <Tooltip content={<ChartTip lang={lang} />} cursor={{ stroke: "var(--color-border-strong)" }} />
+          <Tooltip content={<ChartTip />} cursor={{ stroke: "var(--color-border-strong)" }} />
           <ReferenceLine y={0} stroke="var(--color-border-strong)" />
           <Line
             type="monotone"
@@ -273,8 +267,8 @@ export function PitGChart({
   );
 }
 
-export function VolumeChart({ series, interval, lang }: Props) {
-  const t = ui[lang];
+export function VolumeChart({ series, interval }: Props) {
+  const t = ui;
   return (
     <div className="h-40 w-full min-w-0 sm:h-48">
       <ResponsiveContainer width="100%" height="100%">
@@ -297,7 +291,7 @@ export function VolumeChart({ series, interval, lang }: Props) {
             width={44}
           />
           <Tooltip
-            content={<ChartTip lang={lang} />}
+            content={<ChartTip />}
             cursor={{ stroke: "var(--color-border-strong)" }}
           />
           <ReferenceLine y={100} stroke="var(--color-border-strong)" strokeDasharray="3 4" />

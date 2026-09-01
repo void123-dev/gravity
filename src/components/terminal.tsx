@@ -15,7 +15,6 @@ import {
 } from "@/lib/types";
 import {
   METHOD,
-  type Lang,
   consensusLabel,
   couplingLabel,
   regimeLabel,
@@ -38,7 +37,6 @@ import { PitDock } from "@/components/pits";
 import { ConsensusBoard } from "@/components/consensus";
 
 export function Terminal({ initial }: { initial?: GravitySnapshot }) {
-  const [lang, setLang] = useState<Lang>("ru");
   const [symbol, setSymbol] = useState<SymbolCode>("BTC");
   const [interval, setInterval] = useState<Interval>("5m");
   const [windowSize, setWindowSize] = useState<WindowSize>(48);
@@ -47,14 +45,10 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
   const [data, setData] = useState<GravitySnapshot | undefined>(
     () => initial ?? readBootSnapshot(),
   );
-  const t = ui[lang];
-  const method = METHOD[lang];
+  const t = ui;
+  const method = METHOD;
 
   const [syncedAt, setSyncedAt] = useState(() => Date.now());
-
-  useEffect(() => {
-    document.documentElement.lang = lang;
-  }, [lang]);
 
   useEffect(() => {
     setData((cur) => (cur?.venue === venue ? cur : undefined));
@@ -92,31 +86,12 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
             fetching={q.isFetching}
             source={data?.source}
             venue={data?.venue ?? venue}
-            lang={lang}
             onRefresh={() => void q.refetch()}
           />
-          <div className="flex rounded-full bg-surface-2 p-1">
-            <Button
-              variant={lang === "ru" ? "chipOn" : "ghost"}
-              size="sm"
-              className="h-8 rounded-full px-3"
-              onClick={() => setLang("ru")}
-            >
-              RU
-            </Button>
-            <Button
-              variant={lang === "en" ? "chipOn" : "ghost"}
-              size="sm"
-              className="h-8 rounded-full px-3"
-              onClick={() => setLang("en")}
-            >
-              EN
-            </Button>
-          </div>
         </div>
       </header>
 
-      <PitDock venue={venue} onChange={setVenue} lang={lang} />
+      <PitDock venue={venue} onChange={setVenue} />
 
       <div className="flex flex-col gap-3">
         <ChipRow>
@@ -146,7 +121,7 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
           </ChipRow>
           <div className="flex items-center gap-2">
             <span className="text-xs text-subtle">
-              {t.window} · {windowLabel(interval, windowSize, lang)}
+              {t.window} · {windowLabel(interval, windowSize)}
             </span>
             <ChipRow>
               {WINDOWS.map((w) => (
@@ -156,7 +131,7 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
                   className="rounded-full"
                   onClick={() => setWindowSize(w)}
                 >
-                  {windowChipLabel(w, lang)}
+                  {windowChipLabel(w)}
                 </Button>
               ))}
             </ChipRow>
@@ -183,11 +158,11 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
               </p>
               <p className="mt-1 font-display text-xl text-fg">
                 {data.venue === "all"
-                  ? consensusLabel(lang, data.consensus)
-                  : couplingLabel(lang, data.coupling)}
+                  ? consensusLabel(data.consensus)
+                  : couplingLabel(data.coupling)}
               </p>
               {data.venue === "all" ? null : (
-                <p className="text-xs text-muted">{regimeLabel(lang, data.regime)}</p>
+                <p className="text-xs text-muted">{regimeLabel(data.regime)}</p>
               )}
               <GravityGauge
                 g={data.g}
@@ -195,7 +170,6 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
                 perpShare={data.perpShare}
                 spotDir={data.spotPull.dir}
                 perpDir={data.perpPull.dir}
-                lang={lang}
               />
               <div className="mt-4 flex items-center justify-between gap-3">
                 <p className="text-xs text-muted">
@@ -246,18 +220,18 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
               {data.venue === "all" ? null : (
                 <div className="rounded-xl bg-surface p-5 shadow-border">
                   <p className="mb-4 text-xs tracking-wide text-subtle">{t.components}</p>
-                  <Contributions components={data.components} lang={lang} />
+                  <Contributions components={data.components} />
                 </div>
               )}
             </div>
           </section>
 
           {data.venue === "all" ? (
-            <ConsensusBoard data={data} lang={lang} />
+            <ConsensusBoard data={data} />
           ) : (
             <>
-              <PullVectors data={data} lang={lang} />
-              <VolumePanel data={data} lang={lang} />
+              <PullVectors data={data} />
+              <VolumePanel data={data} />
             </>
           )}
 
@@ -268,14 +242,14 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
                 {t.price} · {t.spot} + {t.basis}
               </p>
               <p className="font-mono text-xs tabular-nums text-muted">
-                {formatPct(data.priceChangePct)} / {tfShort(data.interval, data.window, lang)}
+                {formatPct(data.priceChangePct)} / {tfShort(data.interval, data.window)}
               </p>
             </div>
-            <PriceChart series={data.series} interval={data.interval} lang={lang} />
+            <PriceChart series={data.series} interval={data.interval} />
             <p className="mt-5 mb-2 text-xs tracking-wide text-subtle">
               {t.share}: {t.spot} / {t.perp}
             </p>
-            <GravityChart series={data.series} interval={data.interval} lang={lang} />
+            <GravityChart series={data.series} interval={data.interval} />
             <p className="mt-4 mb-2 text-xs tracking-wide text-subtle">{t.ribbon}</p>
             <DiscoveryRibbon series={data.series} />
           </section>
@@ -287,10 +261,9 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
               interval={interval}
               windowSize={windowSize}
               venue={venue}
-              lang={lang}
               onPick={setInterval}
             />
-            <p className="text-sm leading-relaxed text-fg text-pretty">{verdict(data, lang)}</p>
+            <p className="text-sm leading-relaxed text-fg text-pretty">{verdict(data)}</p>
           </section>
 
           <section className="rounded-xl bg-surface shadow-border">

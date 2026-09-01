@@ -1,6 +1,5 @@
 import type { GravitySnapshot, PitRow } from "@/lib/types";
 import {
-  type Lang,
   consensusLabel,
   couplingShort,
   ui,
@@ -9,8 +8,8 @@ import {
 import { cn } from "@/lib/utils";
 import { PitGChart } from "@/components/charts";
 
-export function ConsensusBoard({ data, lang }: { data: GravitySnapshot; lang: Lang }) {
-  const t = ui[lang];
+export function ConsensusBoard({ data }: { data: GravitySnapshot }) {
+  const t = ui;
   const rows = data.pits ?? [];
   const live = data.consensusLive ?? 0;
   const n = rows.length;
@@ -24,26 +23,26 @@ export function ConsensusBoard({ data, lang }: { data: GravitySnapshot; lang: La
           {live}/{n} {t.consensusLive}
         </p>
       </div>
-      <p className="mt-1 font-display text-xl text-fg">{consensusLabel(lang, data.consensus)}</p>
+      <p className="mt-1 font-display text-xl text-fg">{consensusLabel(data.consensus)}</p>
       <div className="mt-4 grid gap-2 sm:grid-cols-3">
         {rows.map((row) => (
-          <PitScore key={row.venue} row={row} lang={lang} />
+          <PitScore key={row.venue} row={row} />
         ))}
       </div>
       <p className="mt-4 mb-2 text-xs tracking-wide text-subtle">{t.pitsChart}</p>
-      <PitGChart series={data.series} interval={data.interval} pits={rows} lang={lang} />
+      <PitGChart series={data.series} interval={data.interval} pits={rows} />
     </section>
   );
 }
 
-function PitScore({ row, lang }: { row: PitRow; lang: Lang }) {
-  const t = ui[lang];
+function PitScore({ row }: { row: PitRow }) {
+  const t = ui;
   const pct = ((row.g + 1) / 2) * 100;
   const demo = row.source === "demo";
   return (
     <div className={cn("rounded-lg bg-surface-2 p-3", demo && "opacity-60")}>
       <div className="flex items-baseline justify-between gap-2">
-        <p className="text-sm text-fg">{venueLabel(lang, row.venue)}</p>
+        <p className="text-sm text-fg">{venueLabel(row.venue)}</p>
         <p className="font-mono text-xs tabular-nums text-muted">
           {demo ? t.demo : t.live}
         </p>
@@ -68,7 +67,7 @@ function PitScore({ row, lang }: { row: PitRow; lang: Lang }) {
         />
       </div>
       <p className="mt-2 text-xs text-subtle">
-        {couplingShort(lang, row.coupling)} · {row.spotShare.toFixed(0)}/{row.perpShare.toFixed(0)}
+        {couplingShort(row.coupling)} · {row.spotShare.toFixed(0)}/{row.perpShare.toFixed(0)}
       </p>
     </div>
   );

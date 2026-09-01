@@ -1,6 +1,5 @@
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Lang } from "@/lib/copy";
 import { ui } from "@/lib/copy";
 import type { PullDir } from "@/lib/types";
 
@@ -10,11 +9,10 @@ type Props = {
   perpShare: number;
   spotDir: PullDir;
   perpDir: PullDir;
-  lang: Lang;
-};
+  };
 
-export function GravityGauge({ g, spotShare, perpShare, spotDir, perpDir, lang }: Props) {
-  const t = ui[lang];
+export function GravityGauge({ g, spotShare, perpShare, spotDir, perpDir }: Props) {
+  const t = ui;
   const clamped = Math.max(-1, Math.min(1, g));
   const angle = 180 - (clamped + 1) * 90;
   const rad = (angle * Math.PI) / 180;

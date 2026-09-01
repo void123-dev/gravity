@@ -1,11 +1,11 @@
 import { cn, formatPct, formatUsdCompact } from "@/lib/utils";
 import type { GravitySnapshot, VenueVolume } from "@/lib/types";
-import { type Lang, tfShort, ui, volumeBlurb } from "@/lib/copy";
+import { tfShort, ui, volumeBlurb } from "@/lib/copy";
 import { VolumeChart } from "@/components/charts";
 
-export function VolumePanel({ data, lang }: { data: GravitySnapshot; lang: Lang }) {
-  const t = ui[lang];
-  const dur = tfShort(data.interval, data.window, lang);
+export function VolumePanel({ data }: { data: GravitySnapshot }) {
+  const t = ui;
+  const dur = tfShort(data.interval, data.window);
 
   return (
     <section className="rounded-xl bg-surface p-5 shadow-border sm:p-6">
@@ -20,13 +20,13 @@ export function VolumePanel({ data, lang }: { data: GravitySnapshot; lang: Lang 
           </p>
         </div>
         <p className="max-w-xl text-sm leading-relaxed text-muted text-pretty">
-          {volumeBlurb(data, lang)}
+          {volumeBlurb(data)}
         </p>
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <VolCard label={t.spot} tone="spot" vol={data.spotVol} lang={lang} />
-        <VolCard label={t.perp} tone="perp" vol={data.perpVol} lang={lang} />
+        <VolCard label={t.spot} tone="spot" vol={data.spotVol} />
+        <VolCard label={t.perp} tone="perp" vol={data.perpVol} />
       </div>
 
       <div className="mt-5">
@@ -61,7 +61,7 @@ export function VolumePanel({ data, lang }: { data: GravitySnapshot; lang: Lang 
       </div>
 
       <p className="mt-5 mb-2 text-xs tracking-wide text-subtle">{t.volChart}</p>
-      <VolumeChart series={data.series} interval={data.interval} lang={lang} />
+      <VolumeChart series={data.series} interval={data.interval} />
     </section>
   );
 }
@@ -70,14 +70,12 @@ function VolCard({
   label,
   tone,
   vol,
-  lang,
-}: {
+  }: {
   label: string;
   tone: "spot" | "perp";
   vol: VenueVolume;
-  lang: Lang;
-}) {
-  const t = ui[lang];
+  }) {
+  const t = ui;
   const hot = vol.deltaPct >= 0;
   return (
     <div className="rounded-lg bg-surface-2 p-4">
