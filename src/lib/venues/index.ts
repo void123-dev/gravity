@@ -1,5 +1,5 @@
 import { computeGravity } from "../gravity";
-import type { GravitySnapshot, Interval, PitId, SymbolCode, VenueId } from "../types";
+import { DEFAULT_VENUE, type GravitySnapshot, type Interval, type PitId, type SymbolCode, type VenueId } from "../types";
 import { buildConsensus } from "./consensus";
 import { buildDemo } from "./demo";
 import { getAdapter, listVenueIds, listVenuePlugins, registerVenue } from "./registry";
@@ -12,7 +12,7 @@ const TTL_MS = 12_000;
 const cache = new Map<string, { at: number; data: GravitySnapshot }>();
 
 export function parseVenue(raw: unknown): PitId {
-  const v = String(raw ?? "okx").toLowerCase();
+  const v = String(raw ?? DEFAULT_VENUE).toLowerCase();
   if (v === "all" || v === "consensus" || v === "market") return "all";
   if (getAdapter(v)) return v as VenueId;
   return parseKnown(raw);

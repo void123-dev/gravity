@@ -7,8 +7,10 @@ export type Interval = (typeof INTERVALS)[number];
 export const WINDOWS = [24, 48, 96] as const;
 export type WindowSize = (typeof WINDOWS)[number];
 
-export const VENUES = ["okx", "binance", "bybit"] as const;
+// Left → right = typical BTC USD volume rank, not live G.
+export const VENUES = ["binance", "bybit", "okx"] as const;
 export type VenueId = (typeof VENUES)[number];
+export const DEFAULT_VENUE: VenueId = VENUES[0];
 export const PIT_ALL = "all" as const;
 export type PitId = VenueId | typeof PIT_ALL;
 export type DataSource = VenueId | "demo" | "consensus";

@@ -16,9 +16,9 @@ export type VenuePlugin = {
 };
 
 const adapters: Record<string, Adapter> = {
-  okx: fetchOkx,
   binance: fetchBinance,
   bybit: fetchBybit,
+  okx: fetchOkx,
 };
 
 const extra: string[] = [];
