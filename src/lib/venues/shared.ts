@@ -1,4 +1,4 @@
-import type { Bar, Interval, PitId, SymbolCode, VenueId } from "../types";
+import { DEFAULT_VENUE, type Bar, type Interval, type PitId, type SymbolCode, type VenueId } from "../types.ts";
 
 export const UA = "GRAVITY/1.3 (https://github.com/void123-dev/gravity)";
 
@@ -120,10 +120,10 @@ export function alignBars(
 }
 
 export function parseVenue(raw: unknown): PitId {
-  const v = String(raw ?? "okx").toLowerCase();
+  const v = String(raw ?? DEFAULT_VENUE).toLowerCase();
   if (v === "all" || v === "consensus" || v === "market") return "all";
   if (v === "binance" || v === "bybit" || v === "okx") return v;
-  return "okx";
+  return DEFAULT_VENUE;
 }
 
 export type Adapter = (

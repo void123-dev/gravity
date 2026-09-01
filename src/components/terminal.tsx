@@ -6,6 +6,7 @@ import {
   INTERVALS,
   SYMBOLS,
   WINDOWS,
+  DEFAULT_VENUE,
   type GravitySnapshot,
   type Interval,
   type PitId,
@@ -41,7 +42,7 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
   const [symbol, setSymbol] = useState<SymbolCode>("BTC");
   const [interval, setInterval] = useState<Interval>("5m");
   const [windowSize, setWindowSize] = useState<WindowSize>(48);
-  const [venue, setVenue] = useState<PitId>(initial?.venue ?? "okx");
+  const [venue, setVenue] = useState<PitId>(initial?.venue ?? DEFAULT_VENUE);
   const [methodOpen, setMethodOpen] = useState(false);
   const [data, setData] = useState<GravitySnapshot | undefined>(
     () => initial ?? readBootSnapshot(),

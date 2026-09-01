@@ -4,6 +4,7 @@ import { computeGravity } from "./gravity.ts";
 import type { Bar } from "./types.ts";
 import { parseVenue } from "./venues/shared.ts";
 import { decideConsensus } from "./venues/consensus.ts";
+import { VENUES } from "./types.ts";
 
 function makeBars(opts: {
   n?: number;
@@ -142,13 +143,14 @@ describe("GDI-1.3 equalization", () => {
 });
 
 describe("venue pits", () => {
-  it("parses known venues and defaults unknown to okx", () => {
+  it("parses known venues and defaults unknown to binance", () => {
     assert.equal(parseVenue("binance"), "binance");
     assert.equal(parseVenue("BYBIT"), "bybit");
     assert.equal(parseVenue("all"), "all");
     assert.equal(parseVenue("market"), "all");
-    assert.equal(parseVenue("nope"), "okx");
-    assert.equal(parseVenue(undefined), "okx");
+    assert.equal(parseVenue("nope"), "binance");
+    assert.equal(parseVenue(undefined), "binance");
+    assert.deepEqual([...VENUES], ["binance", "bybit", "okx"]);
   });
 
   it("consensus uses live majority, not a blend of candles", () => {

@@ -10,6 +10,7 @@ import type {
   PullDir,
   RegimeId,
 } from "./types";
+import { DEFAULT_VENUE } from "./types";
 import { formatPct, formatUsdCompact } from "./utils";
 
 export type Lang = "ru" | "en";
@@ -92,7 +93,7 @@ export const ui = {
     live: "live",
     demo: "Демо-поток",
     pits: "Питы",
-    pitsHint: "GDI сравнивает спот и перпы одной биржи. Ключи API не нужны — публичный рынок.",
+    pitsHint: "Слева — крупнее по типичному обороту BTC. GDI всё равно внутри одной биржи.",
     pitOkx: "OKX",
     pitBinance: "Binance",
     pitBybit: "Bybit",
@@ -179,7 +180,7 @@ export const ui = {
     live: "live",
     demo: "Demo feed",
     pits: "Pits",
-    pitsHint: "GDI compares spot vs perps on one exchange. No API keys — public market data.",
+    pitsHint: "Left = typically larger BTC volume. GDI still compares spot vs perps on one pit.",
     pitOkx: "OKX",
     pitBinance: "Binance",
     pitBybit: "Bybit",
@@ -295,7 +296,7 @@ export function venueBooks(lang: Lang, id: PitId): string {
 export function sourceLabel(lang: Lang, source: DataSource | undefined, venue?: PitId): string {
   const t = ui[lang];
   if (source === "consensus" || venue === "all") return t.consensus;
-  const name = venueLabel(lang, venue ?? (source === "demo" || !source ? "okx" : source));
+  const name = venueLabel(lang, venue ?? (source === "demo" || !source ? DEFAULT_VENUE : source));
   if (!source || source === "demo") return `${t.demo} · ${name}`;
   return `${name} ${t.live}`;
 }
