@@ -491,24 +491,32 @@ function scoreWindow(bars: Bar[]): {
     1,
   );
 
+  const components: GravityComponents = {
+    lead: fin(lead),
+    basis: fin(basis),
+    flow: fin(flow ?? 0),
+    oi: fin(oi ?? 0),
+    vol: fin(vol ?? 0),
+  };
   const corr = pearson(rS, rP);
-  const sync = Math.abs(corr);
   const nFactor = clamp(bars.length / 36, 0.35, 1);
   const activity = stdev(rS) + stdev(rP);
   const live = activity > 1e-6 ? 1 : 0.4;
-  const volConfirm = Math.abs(vol ?? 0);
+  const mag = Math.abs(g);
+  const parts = [lead, basis, flow ?? 0, oi ?? 0, vol ?? 0].filter((x) => Math.abs(x) >= 0.08);
+  const gSign = Math.sign(g);
+  const agree =
+    parts.length && gSign !== 0
+      ? parts.filter((x) => Math.sign(x) === gSign).length / parts.length
+      : 0;
+  // Certainty of WHO leads — not how glued the tape is. High spot–perp
+  // correlation means coupling, not a confident 60/40 split.
   const confidence =
-    clamp(0.22 + 0.48 * sync + 0.2 * nFactor + 0.1 * volConfirm, 0.2, 0.96) * live;
+    clamp(0.16 + 0.52 * mag + 0.18 * nFactor + 0.14 * agree, 0.16, 0.92) * live;
 
   return {
     g: fin(g),
-    components: {
-      lead: fin(lead),
-      basis: fin(basis),
-      flow: fin(flow ?? 0),
-      oi: fin(oi ?? 0),
-      vol: fin(vol ?? 0),
-    },
+    components,
     confidence: fin(confidence),
     lag: estimateLag(rS, rP),
     corr: fin(corr),

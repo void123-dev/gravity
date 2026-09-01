@@ -16,6 +16,7 @@ import {
   METHOD,
   type Lang,
   consensusLabel,
+  couplingLabel,
   regimeLabel,
   tfShort,
   ui,
@@ -182,8 +183,11 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
               <p className="mt-1 font-display text-xl text-fg">
                 {data.venue === "all"
                   ? consensusLabel(lang, data.consensus)
-                  : regimeLabel(lang, data.regime)}
+                  : couplingLabel(lang, data.coupling)}
               </p>
+              {data.venue === "all" ? null : (
+                <p className="text-xs text-muted">{regimeLabel(lang, data.regime)}</p>
+              )}
               <GravityGauge
                 g={data.g}
                 spotShare={data.spotShare}

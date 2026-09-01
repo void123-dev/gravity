@@ -137,6 +137,7 @@ describe("GDI-1.3 equalization", () => {
     assert.ok(Math.abs(d.components.basis) < 0.22, `basis ${d.components.basis}`);
     assert.ok(Math.abs(d.components.oi) < 0.08, `oi ${d.components.oi}`);
     assert.ok(Math.abs(d.g) < 0.22, `G ${d.g}`);
+    assert.ok(d.confidence < 0.55, `glued tape must not look certain, confidence ${d.confidence}`);
   });
 });
 
