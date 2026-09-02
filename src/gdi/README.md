@@ -24,7 +24,7 @@ Do not import `src/lib/utils.ts`, venues, or UI. Venue names (`binance`, …) ar
 
 kScript: rewrite the loops; you still need a spot series and a perp series on one timeframe. OI and taker are optional bars fields — without them those blocks go to 0.
 
-Host HTTP export (`/api/export`) is not this folder. It only serializes `GravitySnapshot`.
+Host HTTP export (`/api/export`) is not this folder. It only serializes `GravitySnapshot`. Integrator guide: [`docs/API.md`](../docs/API.md).
 
 ## Contract
 
