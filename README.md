@@ -42,12 +42,24 @@ API:
 GET /api/gravity?symbol=BTC&interval=5m&window=48&venue=binance
 GET /api/gravity?symbol=BTC&interval=5m&window=48&venue=all
 GET /api/venues
+GET /api/export?symbol=BTC&interval=5m&window=48&venue=binance&format=json
+GET /api/export?symbol=BTC&interval=5m&window=48&venue=binance&format=csv
+GET /api/export?format=schema
 ```
 
 `venue`: binance, bybit, okx, **all**  
 `symbol`: BTC, ETH, SOL, XRP, DOGE, BNB  
 `interval`: 1m, 5m, 15m, 1H, 4H  
-`window`: 24, 48, 96 bars
+`window`: 24, 48, 96 bars  
+`format` (export only): json, csv, schema
+
+Export is the same GDI snapshot third parties should consume. CORS is open (`*`). No API keys. JSON envelope: `{ api, version, query, readme, snapshot }`. CSV is the `series` rows plus a header comment with G and coupling. `source=demo` is synthetic — do not treat it as tape.
+
+Example:
+
+```
+curl -s "https://<host>/api/export?symbol=BTC&interval=5m&venue=okx&format=json"
+```
 
 New exchange — adapter `fetch(symbol, interval, window) → { bars, funding, premium, oiUsd }`:
 

@@ -133,6 +133,8 @@ export const ui = {
   agreeHit: "Vector matched price",
   agreeMiss: "Vector and price diverged",
   agreeWeak: "Net is weak — bar has no clear print",
+  exportJson: "Export JSON",
+  exportCsv: "Export CSV",
 } as const;
 
 export function regimeLabel(id: RegimeId): string {

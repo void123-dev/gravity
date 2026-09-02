@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiExportRouteImport } from './routes/api/export'
 import { Route as ApiGravityRouteImport } from './routes/api/gravity'
 import { Route as ApiVenuesRouteImport } from './routes/api/venues'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExportRoute = ApiExportRouteImport.update({
+  id: '/api/export',
+  path: '/api/export',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiGravityRoute = ApiGravityRouteImport.update({
@@ -31,30 +37,34 @@ const ApiVenuesRoute = ApiVenuesRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/export': typeof ApiExportRoute
   '/api/gravity': typeof ApiGravityRoute
   '/api/venues': typeof ApiVenuesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/export': typeof ApiExportRoute
   '/api/gravity': typeof ApiGravityRoute
   '/api/venues': typeof ApiVenuesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/export': typeof ApiExportRoute
   '/api/gravity': typeof ApiGravityRoute
   '/api/venues': typeof ApiVenuesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/gravity' | '/api/venues'
+  fullPaths: '/' | '/api/export' | '/api/gravity' | '/api/venues'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/gravity' | '/api/venues'
-  id: '__root__' | '/' | '/api/gravity' | '/api/venues'
+  to: '/' | '/api/export' | '/api/gravity' | '/api/venues'
+  id: '__root__' | '/' | '/api/export' | '/api/gravity' | '/api/venues'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiExportRoute: typeof ApiExportRoute
   ApiGravityRoute: typeof ApiGravityRoute
   ApiVenuesRoute: typeof ApiVenuesRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/export': {
+      id: '/api/export'
+      path: '/api/export'
+      fullPath: '/api/export'
+      preLoaderRoute: typeof ApiExportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/gravity': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiExportRoute: ApiExportRoute,
   ApiGravityRoute: ApiGravityRoute,
   ApiVenuesRoute: ApiVenuesRoute,
 }

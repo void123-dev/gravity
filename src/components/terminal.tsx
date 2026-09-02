@@ -88,6 +88,18 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
             venue={data?.venue ?? venue}
             onRefresh={() => void q.refetch()}
           />
+          <a
+            className="inline-flex h-9 items-center rounded-full bg-surface-2 px-3 text-xs text-muted hover:text-fg"
+            href={`/api/export?symbol=${symbol}&interval=${interval}&window=${windowSize}&venue=${venue}&format=json&download=1`}
+          >
+            {t.exportJson}
+          </a>
+          <a
+            className="inline-flex h-9 items-center rounded-full bg-surface-2 px-3 text-xs text-muted hover:text-fg"
+            href={`/api/export?symbol=${symbol}&interval=${interval}&window=${windowSize}&venue=${venue}&format=csv`}
+          >
+            {t.exportCsv}
+          </a>
         </div>
       </header>
 
