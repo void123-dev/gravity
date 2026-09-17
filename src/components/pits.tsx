@@ -1,17 +1,22 @@
 import { PIT_ALL, VENUES, type PitId } from "@/lib/types";
 import { ui, venueBooks, venueLabel } from "@/lib/copy";
 import { cn } from "@/lib/utils";
-
-const DOCK: PitId[] = [...VENUES, PIT_ALL];
+import type { VenuePitInfo } from "@/lib/venues/catalog";
 
 export function PitDock({
   venue,
   onChange,
-  }: {
+  pits,
+}: {
   venue: PitId;
   onChange: (id: PitId) => void;
-  }) {
+  pits?: VenuePitInfo[];
+}) {
   const t = ui;
+  const ids: PitId[] = pits?.length
+    ? [...pits.map((p) => p.id as PitId), PIT_ALL]
+    : [...VENUES, PIT_ALL];
+  const sourceOf = (id: PitId) => pits?.find((p) => p.id === id)?.source;
   return (
     <section className="rounded-xl bg-surface p-3 shadow-border sm:p-4">
       <div className="flex flex-wrap items-end justify-between gap-2">
@@ -19,8 +24,15 @@ export function PitDock({
         <p className="max-w-xl text-xs text-muted text-pretty">{t.pitsHint}</p>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
-        {DOCK.map((id) => {
+        {ids.map((id) => {
           const on = id === venue;
+          const src = sourceOf(id);
+          const books =
+            id === PIT_ALL
+              ? venueBooks(id)
+              : src
+                ? `${src === "live" ? t.live : t.demo} · ${venueBooks(id)}`
+                : venueBooks(id);
           return (
             <button
               key={id}
@@ -35,9 +47,7 @@ export function PitDock({
               <Well on={on} />
               <span className="min-w-0">
                 <span className="block font-display text-sm text-fg">{venueLabel(id)}</span>
-                <span className="block truncate font-mono text-xs text-subtle">
-                  {venueBooks(id)}
-                </span>
+                <span className="block truncate font-mono text-xs text-subtle">{books}</span>
               </span>
             </button>
           );

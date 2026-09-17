@@ -29,7 +29,7 @@ const README = {
   g: "G in [-1, +1]. Negative = spot discovers the print. Positive = perps.",
   share: "Influence share = 50 ± 50·G. Not turnover share.",
   coupling: "sync_up | sync_down | fight | spot_alone | perp_alone | quiet",
-  source: "Venue id is live. demo is synthetic and must not be treated as tape.",
+  source: "snapshot.source is live | demo | consensus. Venue id is snapshot.venue. demo is synthetic and must not be treated as tape.",
 } as const;
 
 export function packExport(snapshot: GravitySnapshot, fetchedAt = Date.now()): GdiExport {
@@ -53,11 +53,13 @@ export const EXPORT_SCHEMA = {
   api: EXPORT_API,
   version: EXPORT_VERSION,
   endpoints: {
-    snapshot: "GET /api/gravity?symbol=BTC&interval=5m&window=48&venue=binance",
-    exportJson: "GET /api/export?symbol=BTC&interval=5m&window=48&venue=binance&format=json",
-    exportCsv: "GET /api/export?symbol=BTC&interval=5m&window=48&venue=binance&format=csv",
+    snapshot: "GET /api/gravity?symbol=BTC&interval=5m&window=48&venue=okx",
+    exportJson: "GET /api/gdi?symbol=BTC&interval=5m&window=48&venue=okx&format=json",
+    exportJsonAlias: "GET /api/export?symbol=BTC&interval=5m&window=48&venue=okx&format=json",
+    exportCsv: "GET /api/gdi?symbol=BTC&interval=5m&window=48&venue=okx&format=csv",
+    gravityEnvelope: "GET /api/gravity?symbol=BTC&interval=5m&window=48&venue=okx&format=json",
     venues: "GET /api/venues",
-    schema: "GET /api/export?format=schema",
+    schema: "GET /api/gdi?format=schema",
   },
   query: {
     symbol: ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB"],

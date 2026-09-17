@@ -6,7 +6,7 @@ function parseInput(raw: unknown): {
   symbol: SymbolCode;
   interval: Interval;
   window: number;
-  venue: PitId;
+  venue?: PitId;
 } {
   const data = (raw ?? {}) as Record<string, unknown>;
   const symbolRaw = String(data.symbol ?? "BTC").toUpperCase();
@@ -19,7 +19,9 @@ function parseInput(raw: unknown): {
     ? (intervalRaw as Interval)
     : "5m";
   const window = (WINDOWS as readonly number[]).includes(windowRaw) ? windowRaw : 48;
-  const venue = parseVenue(data.venue);
+  const venueRaw = data.venue;
+  const venue =
+    venueRaw == null || venueRaw === "" ? undefined : parseVenue(venueRaw);
   return { symbol, interval, window, venue };
 }
 
@@ -29,3 +31,8 @@ export const getGravity = createServerFn({ method: "GET" })
     const { loadGravity } = await import("./venues");
     return loadGravity(data);
   });
+
+export const getVenueCatalog = createServerFn({ method: "GET" }).handler(async () => {
+  const { loadVenueCatalog } = await import("./venues");
+  return loadVenueCatalog();
+});

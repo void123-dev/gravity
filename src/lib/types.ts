@@ -24,13 +24,15 @@ export type SymbolCode = (typeof SYMBOLS)[number];
 export const WINDOWS = [24, 48, 96] as const;
 export type WindowSize = (typeof WINDOWS)[number];
 
-// Left → right = typical BTC USD volume rank, not live G.
+// Typical BTC USD volume rank. UI order comes from /api/venues (live first).
 export const VENUES = ["binance", "bybit", "okx"] as const;
 export type VenueId = (typeof VENUES)[number];
-export const DEFAULT_VENUE: VenueId = VENUES[0];
+/** Last-resort pit id if the catalog has no live feed. UI uses catalog.default. */
+export const DEFAULT_VENUE: VenueId = "okx";
 export const PIT_ALL = "all" as const;
 export type PitId = VenueId | typeof PIT_ALL;
-export type DataSource = VenueId | "demo" | "consensus";
+/** Tape class. Venue id lives in `venue`, never here. */
+export type DataSource = "live" | "demo" | "consensus";
 
 export type ConsensusId = "agree_spot" | "agree_perp" | "split" | "quiet";
 

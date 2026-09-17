@@ -142,6 +142,90 @@ function authPopupPlugin(): Plugin {
   };
 }
 
+/**
+ * GDI JSON on /api/export and /api/gdi, before Start / PWA HTML fallback
+ * and before Vite's OPTIONS short-circuit. grok.me may reserve "export";
+ * never answer that path with HTML-only.
+ */
+function gdiApiPlugin(): Plugin {
+  const paths = new Set(["/api/export", "/api/gdi", "/api/gravity", "/api/venues"]);
+  const jsonPaths = new Set(["/api/export", "/api/gdi"]);
+  return {
+    name: "gravity:gdi-api",
+    apply: "serve",
+    configureServer(server) {
+      const handler = async (req, res, next) => {
+        try {
+          const rawUrl = req.url ?? "";
+          const pathOnly = rawUrl.split("?", 1)[0] ?? "";
+          if (!paths.has(pathOnly)) {
+            next();
+            return;
+          }
+          const method = (req.method ?? "GET").toUpperCase();
+          if (method === "OPTIONS") {
+            res.statusCode = 204;
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+            res.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept");
+            res.setHeader("Access-Control-Max-Age", "86400");
+            res.end();
+            return;
+          }
+          if (method !== "GET" || !jsonPaths.has(pathOnly)) {
+            next();
+            return;
+          }
+
+          const host = String(
+            req.headers["x-forwarded-host"] ?? req.headers.host ?? "localhost:8080",
+          );
+          const proto = String(
+            req.headers["x-forwarded-proto"] ??
+              ((req.socket as { encrypted?: boolean } | undefined)?.encrypted ? "https" : "http"),
+          );
+          const requestHeaders = new Headers();
+          for (const [key, value] of Object.entries(req.headers)) {
+            if (value === undefined) continue;
+            if (Array.isArray(value)) {
+              for (const v of value) requestHeaders.append(key, v);
+            } else {
+              requestHeaders.set(key, value);
+            }
+          }
+          if (!requestHeaders.has("host")) requestHeaders.set("host", host);
+
+          const request = new Request(`${proto}://${host}${rawUrl}`, {
+            method,
+            headers: requestHeaders,
+          });
+          const mod = (await server.ssrLoadModule("/src/lib/export-http.ts")) as {
+            handleGdiRead: (
+              incoming: Request,
+              fallback: "json" | "csv" | "schema" | "raw",
+            ) => Promise<Response>;
+          };
+          const response = await mod.handleGdiRead(request, "json");
+          res.statusCode = response.status;
+          response.headers.forEach((value, key) => {
+            res.setHeader(key, value);
+          });
+          const body = Buffer.from(await response.arrayBuffer());
+          res.end(body);
+        } catch (err) {
+          console.error("[gravity] /api/export handler failed:", err);
+          if (!res.headersSent) {
+            res.statusCode = 500;
+            res.setHeader("content-type", "application/json; charset=utf-8");
+            res.end(JSON.stringify({ error: "gdi export failed" }));
+          }
+        }
+      };
+      server.middlewares.stack.unshift({ route: "", handle: handler });
+    },
+  };
+}
+
 // `0.0.0.0:8080` is the live-preview contract — don't change host/port.
 // The dev server starts once `src/router.tsx` and `src/routes/` exist — see
 // AGENTS.md § "First scaffold".
@@ -159,6 +243,7 @@ export default defineConfig(({ command, isPreview }) => ({
   resolve: { tsconfigPaths: true },
   plugins: [
     pgliteBootstrapPlugin(),
+    gdiApiPlugin(),
     // Before tanstackStart so /auth/popup never falls through to the SPA.
     authPopupPlugin(),
     // Dev-only /__app-env, read by scripts/check-auth-invariant.mjs.
