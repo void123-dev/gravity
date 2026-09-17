@@ -36,7 +36,7 @@ describe("GDI export", () => {
       symbol: "BTC",
       interval: "5m",
       venue: "okx",
-      source: "okx",
+      source: "live",
       funding: 0,
       premium: 0,
       oiUsd: 1e9,
@@ -46,6 +46,7 @@ describe("GDI export", () => {
     assert.equal(pack.model, "GDI-1.3");
     assert.equal(pack.snapshot.g, snapshot.g);
     assert.equal(pack.snapshot.series.length, snapshot.series.length);
+    assert.equal(pack.snapshot.source, "live");
     assert.equal(pack.query.venue, "okx");
   });
 
@@ -56,7 +57,7 @@ describe("GDI export", () => {
       symbol: "BTC",
       interval: "5m",
       venue: "okx",
-      source: "okx",
+      source: "live",
       funding: 0,
       premium: 0,
       oiUsd: 1e9,

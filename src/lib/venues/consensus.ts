@@ -40,7 +40,7 @@ export function decideConsensus(rows: PitRow[]): {
   demo: number;
   used: PitRow[];
 } {
-  const live = rows.filter((r) => r.source !== "demo");
+  const live = rows.filter((r) => r.source === "live");
   const demo = rows.length - live.length;
   if (live.length >= 2) {
     return { ...vote(live), live: live.length, demo };

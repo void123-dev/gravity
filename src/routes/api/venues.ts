@@ -6,19 +6,20 @@ export const Route = createFileRoute("/api/venues")({
     handlers: {
       OPTIONS: async () => optionsOk(),
       GET: async () => {
-        const { listVenuePlugins } = await import("@/lib/venues");
+        const { loadVenueCatalog } = await import("@/lib/venues");
+        const catalog = await loadVenueCatalog();
         return Response.json(
           {
-            pits: listVenuePlugins(),
-            consensus: "all",
-            note: "Add a pit with registerVenue({ id, fetch }) then GET /api/gravity?venue=<id>. venue=all is median G of listed pits, not blended candles.",
+            ...catalog,
             export: {
-              json: "/api/export?format=json",
-              csv: "/api/export?format=csv",
-              schema: "/api/export?format=schema",
+              json: "/api/gdi?format=json",
+              csv: "/api/gdi?format=csv",
+              schema: "/api/gdi?format=schema",
+              alias: "/api/export",
+              gravity: "/api/gravity",
             },
           },
-          { headers: corsHeaders() },
+          { headers: corsHeaders({ "Content-Type": "application/json; charset=utf-8" }) },
         );
       },
     },

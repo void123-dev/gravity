@@ -22,12 +22,12 @@ English only: repo docs, comments, commits, UI.
 | Resultant vector | Sum of vectors + last-bar price check |
 | Volume | USDT notional vs **activity** (each market vs its own average) |
 | Taker buy/sell | Who lifts the book. On perps this is not longs vs shorts |
-| Pits | Binance → Bybit → OKX (typical BTC volume, not live G) |
+| Pits | Live first, then volume. Default is the first live pit, not the largest book |
 | Market | Pit consensus |
 
 GDI-1.3 weights: lead-lag 27% · Δ basis 26% · taker 22% · OI 13% · equalized activity 12%. Raw perp notional (~90%) never enters G. Confidence follows |G| and component agreement, not glued-tape correlation.
 
-Data: public market of the selected pit. No API keys. Refresh every 15s. Unavailable venues fall back to a labeled demo feed. Default pit is Binance.
+Data: public market of the selected pit. No API keys. Refresh every 15s. Unavailable venues fall back to a labeled demo feed. Default pit is the first **live** feed (`GET /api/venues` → `default.venue`; OKX today). Demo never votes.
 
 ## Run
 
@@ -39,9 +39,10 @@ npm run dev
 API for third-party apps: **[docs/API.md](docs/API.md)** (endpoints, query catalog, snapshot fields, curl / JS / Python).
 
 ```
-GET /api/gravity?symbol=BTC&interval=5m&window=48&venue=binance
+GET /api/gravity?symbol=BTC&interval=5m&window=48&venue=okx
+GET /api/gdi?symbol=BTC&interval=5m&window=48&venue=okx&format=json
 GET /api/export?symbol=BTC&interval=5m&window=48&venue=okx&format=json
-GET /api/export?format=schema
+GET /api/gdi?format=schema
 GET /api/venues
 ```
 New exchange — adapter `fetch(symbol, interval, window) → { bars, funding, premium, oiUsd }`:

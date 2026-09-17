@@ -4,18 +4,20 @@ Integrate GRAVITY as a **read-only snapshot**. There is no API key. CORS is `*`.
 
 GDI answers one question on one pit and one timeframe: **who is discovering price — spot or perps.** It is not a forecast and not a second indicator.
 
-Live machine-readable map: `GET /api/export?format=schema`
+Live machine-readable map: `GET /api/gdi?format=schema` (alias: `GET /api/export?format=schema`)
 
 Replace `ORIGIN` with the host that serves this app (local `http://localhost:8080` or the deployed preview).
 
 ## 5-minute integrate
 
 ```bash
+curl -sS "$ORIGIN/api/gdi?symbol=BTC&interval=5m&window=48&venue=okx&format=json"
+# alias if the host does not intercept /api/export:
 curl -sS "$ORIGIN/api/export?symbol=BTC&interval=5m&window=48&venue=okx&format=json"
 ```
 
 ```js
-const url = new URL("/api/export", ORIGIN);
+const url = new URL("/api/gdi", ORIGIN);
 url.searchParams.set("symbol", "BTC");
 url.searchParams.set("interval", "5m");
 url.searchParams.set("window", "48");
@@ -35,7 +37,7 @@ const { g, coupling, spotShare, perpShare } = pack.snapshot;
 import requests
 
 r = requests.get(
-    f"{ORIGIN}/api/export",
+    f"{ORIGIN}/api/gdi",
     params={
         "symbol": "BTC",
         "interval": "5m",
@@ -57,9 +59,10 @@ Poll every **15 seconds**. Faster does not create new bars; the server caches ~1
 
 | Method | Path | Use |
 | --- | --- | --- |
-| GET | `/api/export` | **Preferred for third parties.** Envelope + snapshot, or CSV, or schema |
-| GET | `/api/gravity` | Raw `GravitySnapshot` (what the UI polls) |
-| GET | `/api/venues` | Listed pits + pointer to export |
+| GET | `/api/gdi` | **Preferred for third parties.** Envelope + snapshot, or CSV, or schema |
+| GET | `/api/export` | Same handler as `/api/gdi`. Some grok.me hosts intercept this path |
+| GET | `/api/gravity` | Raw `GravitySnapshot` (what the UI polls). `format=json` wraps the envelope |
+| GET | `/api/venues` | Ranked pits, live-first default, pointer to export |
 | OPTIONS | same paths | CORS preflight |
 
 All GET responses include:
@@ -73,18 +76,18 @@ No cookies, no `Authorization` header.
 
 ## Query parameters
 
-Same catalog on `/api/export` and `/api/gravity`. Unknown keys are ignored. Invalid values fall back to the default — they do **not** error.
+Same catalog on `/api/gdi`, `/api/export`, and `/api/gravity`. Unknown keys are ignored. Invalid values fall back to the default — they do **not** error.
 
 | Name | Default | Allowed | Effect on G |
 | --- | --- | --- | --- |
 | `symbol` | `BTC` | `BTC` `ETH` `SOL` `XRP` `DOGE` `BNB` | Which asset’s spot+perp books |
 | `interval` | `5m` | `1m` `5m` `15m` `1H` `4H` | Bar size |
 | `window` | `48` | `24` `48` `96` | How many bars enter `computeGravity` |
-| `venue` | `binance` | `binance` `bybit` `okx` `all` | One pit, or consensus of pits |
-| `format` | `json` | `json` `csv` `schema` | Export only |
+| `venue` | first **live** pit (`GET /api/venues` → `default.venue`) | `binance` `bybit` `okx` `all` | One pit, or consensus of pits |
+| `format` | `json` on `/api/gdi` and `/api/export`; raw snapshot on `/api/gravity` | `json` `csv` `schema` `raw` | Envelope vs CSV vs schema vs bare snapshot |
 | `download` | off | `1` | Export JSON as a file (`Content-Disposition`) |
 
-`3m`, `window=30`, `venue=kraken` are not accepted. They silently become `5m` / `48` / `binance` unless that venue was registered on the host.
+`3m`, `window=30`, `venue=kraken` are not accepted. They silently become `5m` / `48` / last-resort `okx` unless that venue was registered on the host. Omitting `venue` uses `GET /api/venues` → `default.venue` (first live pit). `venue=all` is available but is **not** the default while any single pit is live.
 
 ## `format=json` envelope
 
@@ -99,13 +102,13 @@ Same catalog on `/api/export` and `/api/gravity`. Unknown keys are ignored. Inva
     "g": "G in [-1, +1]. Negative = spot discovers the print. Positive = perps.",
     "share": "Influence share = 50 ± 50·G. Not turnover share.",
     "coupling": "sync_up | sync_down | fight | spot_alone | perp_alone | quiet",
-    "source": "Venue id is live. demo is synthetic and must not be treated as tape."
+    "source": "snapshot.source is live | demo | consensus. Venue id is snapshot.venue. demo is synthetic and must not be treated as tape."
   },
   "snapshot": {}
 }
 ```
 
-`/api/gravity` returns only `snapshot` (no envelope). Prefer `/api/export` so you can pin `api` + `version`.
+`/api/gravity` returns only `snapshot` (no envelope) unless `format=json`. Prefer `/api/gdi` so you can pin `api` + `version`. `/api/export` is the same handler; if a grok.me host answers it with HTML-only, use `/api/gdi`.
 
 ## Snapshot fields
 
@@ -117,7 +120,7 @@ Times are Unix **milliseconds**. Prices are quote of that pit (usually USDT).
 | --- | --- |
 | `model` | Always `GDI-1.3` |
 | `symbol` `interval` `window` `venue` | Echo of the query (after defaults) |
-| `source` | `okx` / `binance` / `bybit` = live pit. `demo` = RNG fallback. `consensus` = Market mode |
+| `source` | `live` = real pit tape. `demo` = RNG fallback. `consensus` = Market mode. Venue id stays in `venue` — never `okx` / `binance` in `source` |
 | `asOf` | Timestamp of the last bar used |
 
 **If `source === "demo"`, discard or flag the row.** Geo-blocks on Binance/Bybit produce demo even when the UI tab exists.
@@ -179,7 +182,7 @@ Attachment. Header comments then rows:
 
 ```
 # GDI-1.3 export
-# symbol=BTC interval=5m window=48 venue=okx source=okx
+# symbol=BTC interval=5m window=48 venue=okx source=live
 # g=-0.2100 coupling=sync_down spotShare=60.5 perpShare=39.5
 t,iso,spot,perp,basisBps,g,spotShare,perpShare,spotPull,perpPull,netPull,spotVol,perpVol,spotVolRel,perpVolRel
 ```
@@ -187,14 +190,14 @@ t,iso,spot,perp,basisBps,g,spotShare,perpShare,spotPull,perpPull,netPull,spotVol
 Market mode adds `g_binance`, `g_bybit`, `g_okx` when those series exist.
 
 ```bash
-curl -sS -o gdi.csv "$ORIGIN/api/export?symbol=BTC&interval=5m&venue=okx&format=csv"
+curl -sS -o gdi.csv "$ORIGIN/api/gdi?symbol=BTC&interval=5m&venue=okx&format=csv"
 ```
 
 ## How to wire it
 
-1. Call `/api/venues` once. Note which pits exist.
+1. Call `/api/venues` once. Use `default.venue` (first live pit) and the ranked `pits`.
 2. Pick `symbol`, `interval`, `window`, `venue`.
-3. GET `/api/export?format=json`.
+3. GET `/api/gdi?format=json` (or `/api/gravity?format=json`).
 4. Drop the payload if `snapshot.source === "demo"` (or show a warning).
 5. Route your own UI:
    - `g < 0` → your **spot** tools
@@ -212,7 +215,7 @@ type GdiExport = {
   fetchedAt: number;
   query: { symbol: string; interval: string; window: number; venue: string };
   snapshot: {
-    source: string;
+    source: "live" | "demo" | "consensus";
     g: number;
     spotShare: number;
     perpShare: number;
@@ -245,3 +248,20 @@ Do not POST candles. Do not send API keys. This host only reads public exchange 
 - Auth, webhooks, streaming WebSocket
 
 To run the same formula on another stack, copy [`src/gdi/`](../src/gdi) and feed it `Bar[]`. The HTTP export is only a serializer around that snapshot.
+
+## `GET /api/venues`
+
+```json
+{
+  "pits": [
+    { "id": "okx", "label": "OKX", "source": "live", "volumeUsd": 1800000000 },
+    { "id": "binance", "label": "Binance", "source": "demo", "volumeUsd": 5100000000 },
+    { "id": "bybit", "label": "Bybit", "source": "demo", "volumeUsd": 530000000 }
+  ],
+  "default": { "venue": "okx", "interval": "5m", "window": 48 },
+  "consensus": "all",
+  "note": "Sorted live first, then volumeUsd desc. Default is first live pit, not largest volume."
+}
+```
+
+Sort: `source === "live"` first, then `volumeUsd` descending, then `id`. `default.venue` is the first live pit. If no pit is live, it is the largest-volume demo — and that snapshot keeps `source: "demo"`. `venue=all` is listed as consensus, not as the default while any pit is live. Demo pits do not vote.

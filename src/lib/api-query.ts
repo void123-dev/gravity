@@ -1,11 +1,11 @@
-import { INTERVALS, SYMBOLS, WINDOWS, type Interval, type SymbolCode } from "./types";
+import { INTERVALS, SYMBOLS, WINDOWS, type Interval, type PitId, type SymbolCode } from "./types";
 import { parseVenue } from "./venues";
 
 export type GravityQuery = {
   symbol: SymbolCode;
   interval: Interval;
   window: number;
-  venue: ReturnType<typeof parseVenue>;
+  venue?: PitId;
 };
 
 export function parseGravityQuery(url: URL): GravityQuery {
@@ -19,15 +19,8 @@ export function parseGravityQuery(url: URL): GravityQuery {
     ? (intervalRaw as Interval)
     : "5m";
   const window = (WINDOWS as readonly number[]).includes(windowRaw) ? windowRaw : 48;
-  return { symbol, interval, window, venue: parseVenue(url.searchParams.get("venue")) };
-}
-
-export function gravityQueryString(q: GravityQuery): string {
-  const p = new URLSearchParams({
-    symbol: q.symbol,
-    interval: q.interval,
-    window: String(q.window),
-    venue: q.venue,
-  });
-  return p.toString();
+  const venueRaw = url.searchParams.get("venue");
+  const venue =
+    venueRaw == null || venueRaw === "" ? undefined : parseVenue(venueRaw);
+  return { symbol, interval, window, venue };
 }

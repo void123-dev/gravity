@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, RefreshCw } from "lucide-react";
-import { fetchGravity, GRAVITY_POLL_MS, readBootSnapshot } from "@/lib/query-gravity";
+import { fetchGravity, fetchVenueCatalog, GRAVITY_POLL_MS, readBootSnapshot, exportHref } from "@/lib/query-gravity";
 import {
   INTERVALS,
   SYMBOLS,
@@ -35,12 +35,21 @@ import { LiveSync } from "@/components/live-sync";
 import { TimeframeStrip } from "@/components/timeframe-strip";
 import { PitDock } from "@/components/pits";
 import { ConsensusBoard } from "@/components/consensus";
+import type { VenueCatalog } from "@/lib/venues/catalog";
 
-export function Terminal({ initial }: { initial?: GravitySnapshot }) {
+export function Terminal({
+  initial,
+  catalog,
+}: {
+  initial?: GravitySnapshot;
+  catalog?: VenueCatalog;
+}) {
   const [symbol, setSymbol] = useState<SymbolCode>("BTC");
   const [interval, setInterval] = useState<Interval>("5m");
   const [windowSize, setWindowSize] = useState<WindowSize>(48);
-  const [venue, setVenue] = useState<PitId>(initial?.venue ?? DEFAULT_VENUE);
+  const [venue, setVenue] = useState<PitId>(
+    () => (initial?.venue ?? catalog?.default.venue ?? DEFAULT_VENUE) as PitId,
+  );
   const [methodOpen, setMethodOpen] = useState(false);
   const [data, setData] = useState<GravitySnapshot | undefined>(
     () => initial ?? readBootSnapshot(),
@@ -53,6 +62,15 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
   useEffect(() => {
     setData((cur) => (cur?.venue === venue ? cur : undefined));
   }, [venue]);
+
+  const catalogQ = useQuery({
+    queryKey: ["venues"],
+    queryFn: fetchVenueCatalog,
+    initialData: catalog,
+    refetchInterval: GRAVITY_POLL_MS,
+    staleTime: 10_000,
+  });
+  const pits = catalogQ.data?.pits;
 
   const q = useQuery({
     queryKey: ["gravity", venue, symbol, interval, windowSize],
@@ -90,20 +108,20 @@ export function Terminal({ initial }: { initial?: GravitySnapshot }) {
           />
           <a
             className="inline-flex h-9 items-center rounded-full bg-surface-2 px-3 text-xs text-muted hover:text-fg"
-            href={`/api/export?symbol=${symbol}&interval=${interval}&window=${windowSize}&venue=${venue}&format=json&download=1`}
+            href={exportHref({ symbol, interval, window: windowSize, venue, format: "json" })}
           >
             {t.exportJson}
           </a>
           <a
             className="inline-flex h-9 items-center rounded-full bg-surface-2 px-3 text-xs text-muted hover:text-fg"
-            href={`/api/export?symbol=${symbol}&interval=${interval}&window=${windowSize}&venue=${venue}&format=csv`}
+            href={exportHref({ symbol, interval, window: windowSize, venue, format: "csv" })}
           >
             {t.exportCsv}
           </a>
         </div>
       </header>
 
-      <PitDock venue={venue} onChange={setVenue} />
+      <PitDock venue={venue} onChange={setVenue} pits={pits} />
 
       <div className="flex flex-col gap-3">
         <ChipRow>

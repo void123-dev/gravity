@@ -60,7 +60,7 @@ export const ui = {
   live: "live",
   demo: "Demo feed",
   pits: "Pits",
-  pitsHint: "Left = typically larger BTC volume. GDI still compares spot vs perps on one pit.",
+  pitsHint: "Live pits first, then volume. Default is the first live pit — GDI still compares spot vs perps on one book.",
   pitOkx: "OKX",
   pitBinance: "Binance",
   pitBybit: "Bybit",
@@ -173,7 +173,7 @@ export function venueBooks(id: PitId): string {
 
 export function sourceLabel(source: DataSource | undefined, venue?: PitId): string {
   if (source === "consensus" || venue === "all") return ui.consensus;
-  const name = venueLabel(venue ?? (source === "demo" || !source ? DEFAULT_VENUE : source));
+  const name = venueLabel(venue ?? DEFAULT_VENUE);
   if (!source || source === "demo") return `${ui.demo} · ${name}`;
   return `${name} ${ui.live}`;
 }

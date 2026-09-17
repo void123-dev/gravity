@@ -1,5 +1,13 @@
 import { computeGravity } from "../gravity";
-import { DEFAULT_VENUE, type GravitySnapshot, type Interval, type PitId, type SymbolCode, type VenueId } from "../types";
+import {
+  DEFAULT_VENUE,
+  type GravitySnapshot,
+  type Interval,
+  type PitId,
+  type SymbolCode,
+  type VenueId,
+} from "../types";
+import { buildVenueCatalog, pitLabel, type VenueCatalog } from "./catalog";
 import { buildConsensus } from "./consensus";
 import { buildDemo } from "./demo";
 import { getAdapter, listVenueIds, listVenuePlugins, registerVenue } from "./registry";
@@ -7,9 +15,12 @@ import { parseVenue as parseKnown } from "./shared";
 
 export { registerVenue, listVenueIds, listVenuePlugins };
 export { decideConsensus } from "./consensus";
+export { buildVenueCatalog, pickDefaultVenue, sortVenuePits } from "./catalog";
+export type { VenueCatalog, VenuePitInfo } from "./catalog";
 
 const TTL_MS = 12_000;
 const cache = new Map<string, { at: number; data: GravitySnapshot }>();
+let catalogCache: { at: number; data: VenueCatalog } | undefined;
 
 export function parseVenue(raw: unknown): PitId {
   const v = String(raw ?? DEFAULT_VENUE).toLowerCase();
@@ -38,7 +49,7 @@ async function loadPit(input: {
       symbol: input.symbol,
       interval: input.interval,
       venue: input.venue,
-      source: input.venue,
+      source: "live",
       funding: feed.funding,
       premium: feed.premium,
       oiUsd: feed.oiUsd,
@@ -61,11 +72,30 @@ async function loadBoard(input: {
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < TTL_MS) return hit.data;
   const ids = listVenueIds();
-  const snaps = await Promise.all(
-    ids.map((venue) => loadPit({ ...input, venue })),
-  );
+  const snaps = await Promise.all(ids.map((venue) => loadPit({ ...input, venue })));
   const data = buildConsensus(snaps);
   cache.set(key, { at: Date.now(), data });
+  return data;
+}
+
+export async function loadVenueCatalog(): Promise<VenueCatalog> {
+  if (catalogCache && Date.now() - catalogCache.at < TTL_MS) return catalogCache.data;
+  const ids = listVenueIds();
+  const snaps = await Promise.all(
+    ids.map((venue) => loadPit({ symbol: "BTC", interval: "5m", window: 48, venue })),
+  );
+  const pits = snaps.map((s, i) => {
+    const id = ids[i] ?? s.venue;
+    const source: "live" | "demo" = s.source === "demo" ? "demo" : "live";
+    return {
+      id: String(id),
+      label: pitLabel(String(id)),
+      source,
+      volumeUsd: Math.round((s.spotVol.total ?? 0) + (s.perpVol.total ?? 0)),
+    };
+  });
+  const data = buildVenueCatalog(pits);
+  catalogCache = { at: Date.now(), data };
   return data;
 }
 
@@ -75,6 +105,10 @@ export async function loadGravity(input: {
   window: number;
   venue?: PitId | string;
 }): Promise<GravitySnapshot> {
+  if (input.venue == null || input.venue === "") {
+    const cat = await loadVenueCatalog();
+    return loadPit({ ...input, venue: cat.default.venue as VenueId });
+  }
   const venue = parseVenue(input.venue);
   if (venue === "all") return loadBoard(input);
   return loadPit({ ...input, venue });
